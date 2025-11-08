@@ -5,12 +5,12 @@
   "main": "dist/code.js",
   "scripts": {
     "build": "npm run build:plugin && npm run build:ui && npm run copy:assets",
-    "build:plugin": "tsc --project tsconfig.plugin.json",
-    "build:ui": "tsc --project tsconfig.ui.json",
-    "copy:assets": "cp src/ui/index.html dist/ui.html && cp dist/ui/index.js dist/index.js && cp -r src/ui/styles dist/styles",
+    "build:plugin": "esbuild src/plugin/index.ts --bundle --outfile=dist/code.js --target=es2020 --platform=neutral",
+    "build:ui": "esbuild src/ui/index.ts --bundle --outfile=dist/ui.js --target=es2020",
+    "copy:assets": "cp src/ui/index.html dist/ui.html && cp -r src/ui/styles dist/styles",
     "watch": "concurrently \"npm run watch:plugin\" \"npm run watch:ui\"",
-    "watch:plugin": "tsc --project tsconfig.plugin.json --watch",
-    "watch:ui": "tsc --project tsconfig.ui.json --watch",
+    "watch:plugin": "esbuild src/plugin/index.ts --bundle --outfile=dist/code.js --target=es2020 --platform=neutral --watch",
+    "watch:ui": "esbuild src/ui/index.ts --bundle --outfile=dist/ui.js --target=es2020 --watch",
     "dev": "npm run build && npm run watch"
   },
   "keywords": [
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@figma/plugin-typings": "^1.90.0",
     "concurrently": "^8.2.2",
+    "esbuild": "^0.25.12",
     "typescript": "^5.3.3"
   }
 }
