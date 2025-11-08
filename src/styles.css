@@ -622,6 +622,18 @@ body {
   box-shadow: 0 0 0 1px var(--color-border-focus);
 }
 
+/* Remove number input spinners for inline update inputs */
+.inline-update__input[type="number"]::-webkit-inner-spin-button,
+.inline-update__input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.inline-update__input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* ========== Modal ========== */
 .modal-overlay {
   position: fixed;
@@ -748,6 +760,18 @@ body {
 
 .form-input::placeholder {
   color: var(--color-text-subdued);
+}
+
+/* Remove number input spinners */
+.form-input[type="number"]::-webkit-inner-spin-button,
+.form-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .form-select {
