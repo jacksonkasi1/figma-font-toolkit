@@ -1,0 +1,30 @@
+{
+  "name": "figma-font-toolkit",
+  "version": "1.0.0",
+  "description": "A minimal Figma plugin for font management and replacement",
+  "main": "dist/code.js",
+  "scripts": {
+    "build": "npm run build:plugin && npm run build:ui && npm run copy:assets",
+    "build:plugin": "tsc --project tsconfig.plugin.json",
+    "build:ui": "tsc --project tsconfig.ui.json",
+    "copy:assets": "cp src/ui/index.html dist/ui.html && cp dist/ui/index.js dist/index.js && cp -r src/ui/styles dist/styles",
+    "watch": "concurrently \"npm run watch:plugin\" \"npm run watch:ui\"",
+    "watch:plugin": "tsc --project tsconfig.plugin.json --watch",
+    "watch:ui": "tsc --project tsconfig.ui.json --watch",
+    "dev": "npm run build && npm run watch"
+  },
+  "keywords": [
+    "figma",
+    "plugin",
+    "font",
+    "typography",
+    "toolkit"
+  ],
+  "author": "Font Toolkit Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.90.0",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  }
+}

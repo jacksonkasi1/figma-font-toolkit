@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "node"
+  },
+  "include": ["src/ui/**/*"],
+  "exclude": ["node_modules", "src/plugin"]
+}
