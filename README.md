@@ -1,8 +1,6 @@
 # Font Toolkit
 
-A minimal Figma plugin for comprehensive font management and replacement. Quickly scan, analyze, and replace fonts across your designs with precision.
-
-![Font Toolkit Banner](https://via.placeholder.com/800x200/18a0fb/ffffff?text=Font+Toolkit)
+A production-ready Figma plugin for comprehensive font management and replacement, built with the `create-figma-plugin` framework.
 
 ## Features
 
@@ -24,11 +22,12 @@ Group and analyze fonts by multiple attributes:
 - **Range-Level Precision**: Replace fonts in specific text ranges, not just entire layers
 - **Typography Updates**: Optionally update line height and font size during replacement
 
-### 🎨 Clean, Minimal UI
-- **Figma-Native Design**: Matches Figma's design language
-- **Dark Mode Support**: Automatically adapts to Figma's theme
-- **Intuitive Navigation**: Tab-based interface for easy access to features
+### 🎨 Modern UI
+- **Preact Components**: Fast, modern UI built with Preact (TSX)
+- **Tab Navigation**: Clean tab-based interface
+- **Modal Dialogs**: Professional replacement interface
 - **Real-Time Search**: Filter fonts as you type
+- **Framework UI**: Uses @create-figma-plugin/ui components
 
 ## Installation
 
@@ -99,72 +98,92 @@ Group and analyze fonts by multiple attributes:
 
 ## Architecture
 
+### Framework
+Built with [`create-figma-plugin`](https://yuanqing.github.io/create-figma-plugin/), providing:
+- Type-safe event handling (`emit`/`on`)
+- Pre-built UI components
+- Automated build system with esbuild
+- TypeScript support
+- Auto-generated manifest.json
+
 ### Project Structure
 
 ```
 figma-font-toolkit/
 ├── src/
-│   ├── plugin/              # Plugin main code (runs in Figma sandbox)
-│   │   ├── index.ts         # Main entry point
-│   │   ├── services/        # Core services
-│   │   │   ├── font-scanner.ts    # Scans and extracts font occurrences
-│   │   │   ├── font-loader.ts     # Async font loading queue
-│   │   │   ├── font-replacer.ts   # Font replacement logic
-│   │   │   └── grouping.ts        # Grouping and metadata
-│   │   ├── types/           # TypeScript type definitions
-│   │   └── utils/           # Utility functions
-│   └── ui/                  # UI code (runs in iframe)
-│       ├── index.html       # UI structure
-│       ├── index.ts         # UI logic and messaging
-│       ├── styles/          # CSS styles
-│       └── components/      # (Future) React components
-├── dist/                    # Compiled output
-├── manifest.json            # Figma plugin manifest
+│   ├── main.ts              # Plugin backend (Figma sandbox)
+│   ├── ui.tsx               # Main UI component (Preact)
+│   ├── types/               # TypeScript type definitions
+│   │   └── index.ts
+│   ├── utilities/           # Shared utilities
+│   │   └── font-operations.ts
+│   ├── components/          # Preact UI components
+│   │   ├── HomeTab.tsx
+│   │   ├── FontsTab.tsx
+│   │   ├── GroupsTab.tsx
+│   │   ├── FontItem.tsx
+│   │   ├── GroupItem.tsx
+│   │   └── ReplaceModal.tsx
+│   └── styles.css           # Custom styles
+├── build/                   # Compiled output
+│   ├── main.js              # Bundled plugin code
+│   └── ui.js                # Bundled UI code
+├── manifest.json            # Auto-generated manifest
 ├── package.json
 └── tsconfig.json
 ```
 
+### Event-Based Communication
+
+Uses `create-figma-plugin`'s event system with type-safe handlers:
+
+**Plugin → UI Events:**
+- `FONTS_SCANNED`: Sends scanned font data and groups
+- `AVAILABLE_FONTS`: Lists all available fonts
+- `REPLACEMENT_COMPLETE`: Reports replacement results
+
+**UI → Plugin Events:**
+- `SCAN_FONTS`: Triggers font scanning
+- `APPLY_REPLACEMENT`: Requests font replacement
+- `PREVIEW_SELECTION`: Highlights layers in canvas
+- `REQUEST_AVAILABLE_FONTS`: Requests font list
+
+**Example:**
+```typescript
+import { emit, on } from '@create-figma-plugin/utilities'
+
+// UI emits event
+emit<ScanFontsHandler>('SCAN_FONTS')
+
+// Plugin listens for event
+on<ScanFontsHandler>('SCAN_FONTS', () => {
+  // Handle scan
+})
+```
+
 ### Core Services
 
-#### Font Scanner (`font-scanner.ts`)
-- Traverses the selection tree recursively
-- Detects single-font and mixed-font text nodes
-- Extracts font metadata: family, style, size, line height, weight
-- Handles edge cases: empty text, missing fonts, permissions errors
+#### Font Operations (`font-operations.ts`)
+- **Scanning**: Recursively traverses selection tree
+- **Mixed Fonts**: Detects fonts within text ranges
+- **Grouping**: Groups by line height, font size, weight, family
+- **Metadata**: Creates usage statistics and node references
+- **Utilities**: Font comparison, weight parsing, line height resolution
 
-#### Font Loader (`font-loader.ts`)
-- Queue-based async font loading
-- Prevents rate limiting with controlled concurrency (max 3 concurrent loads)
-- Caches loaded fonts to avoid redundant loads
-- Graceful error handling for unavailable fonts
+#### Plugin Backend (`main.ts`)
+- Event handler registration
+- Safe font loading with async/await
+- Range-level font replacement
+- Selection and preview management
+- Error handling and notifications
 
-#### Font Replacer (`font-replacer.ts`)
-- Safe font replacement with pre-loading
-- Range-level precision using `setRangeFontName()`
-- Optional typography updates (line height, font size)
-- Comprehensive error reporting and statistics
-
-#### Grouping (`grouping.ts`)
-- Groups occurrences by line height, font size, weight, and family
-- Creates metadata with usage counts and node references
-- Efficient grouping using Map data structures
-
-### Messaging Architecture
-
-Plugin ↔ UI communication uses `postMessage`:
-
-**Plugin → UI Messages:**
-- `fonts-found`: Sends scanned font data
-- `available-fonts`: Lists all available fonts
-- `replacement-complete`: Reports replacement results
-- `progress`: Updates progress during operations
-- `error`: Reports errors
-
-**UI → Plugin Messages:**
-- `scan-fonts`: Triggers font scanning
-- `apply-replacement`: Requests font replacement
-- `preview-selection`: Highlights layers in canvas
-- `load-available-fonts`: Requests font list
+#### UI Components (Preact/TSX)
+- **HomeTab**: Welcome screen with scan trigger
+- **FontsTab**: Font list with search and replace
+- **GroupsTab**: Grouping interface
+- **FontItem**: Individual font card
+- **GroupItem**: Expandable group display
+- **ReplaceModal**: Full replacement dialog
 
 ## Development
 
