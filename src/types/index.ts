@@ -88,3 +88,14 @@ export interface RequestAvailableFontsHandler extends EventHandler {
   name: 'REQUEST_AVAILABLE_FONTS'
   handler: () => void
 }
+
+export interface BulkUpdateSpec {
+  groupType: GroupByType
+  targetValue: number | string
+  occurrences: FontOccurrence[]
+}
+
+export interface BulkUpdateHandler extends EventHandler {
+  name: 'BULK_UPDATE'
+  handler: (spec: BulkUpdateSpec) => void
+}

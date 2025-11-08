@@ -1,17 +1,5 @@
-import { h, Fragment } from 'preact'
+import { h } from 'preact'
 import { useState, useCallback, useMemo } from 'preact/hooks'
-import {
-  Modal,
-  Button,
-  Text,
-  Muted,
-  Textbox,
-  TextboxNumeric,
-  Dropdown,
-  DropdownOption,
-  Toggle,
-  VerticalSpace
-} from '@create-figma-plugin/ui'
 import { emit } from '@create-figma-plugin/utilities'
 import type { FontMetadata, ReplacementSpec, ApplyReplacementHandler, RequestAvailableFontsHandler } from '../types'
 
@@ -60,6 +48,16 @@ export function ReplaceModal({ fontMetadata, availableFonts, onClose }: ReplaceM
     setNewFontStyle(value)
   }, [])
 
+  const handleLineHeightChange = useCallback((event: Event) => {
+    const value = (event.currentTarget as HTMLInputElement).value
+    setNewLineHeight(value)
+  }, [])
+
+  const handleFontSizeChange = useCallback((event: Event) => {
+    const value = (event.currentTarget as HTMLInputElement).value
+    setNewFontSize(value)
+  }, [])
+
   const handleApply = useCallback(() => {
     if (!newFontFamily || !newFontStyle) {
       return
@@ -86,96 +84,125 @@ export function ReplaceModal({ fontMetadata, availableFonts, onClose }: ReplaceM
     onClose()
   }, [fontMetadata, newFontFamily, newFontStyle, updateLineHeight, newLineHeight, updateFontSize, newFontSize, onClose])
 
-  const familyOptions: DropdownOption[] = [
-    { value: '', text: 'Select font family...' },
-    ...fontFamilies.map((family) => ({ value: family, text: family }))
-  ]
-
-  const styleOptions: DropdownOption[] = [
-    { value: '', text: newFontFamily ? 'Select style...' : 'Select a family first' },
-    ...fontStyles.map((style) => ({ value: style, text: style }))
-  ]
-
   return (
-    <Modal open title="Replace Font" onCloseButtonClick={onClose}>
-      <div className="modal-content">
-        <Text>
-          <strong>Current Font</strong>
-        </Text>
-        <VerticalSpace space="small" />
-        <div className="current-font-card">
-          <div className="font-preview">Aa</div>
-          <Text>{fontMetadata.font.family} — {fontMetadata.font.style}</Text>
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal__header">
+          <h3 class="modal__title">Replace Font</h3>
+          <p class="modal__subtitle">
+            {fontMetadata.font.family} — {fontMetadata.font.style} · {fontMetadata.count} ranges in {fontMetadata.nodesCount} layers
+          </p>
         </div>
 
-        <VerticalSpace space="large" />
-
-        <Text>
-          <strong>New Font Family</strong>
-        </Text>
-        <VerticalSpace space="small" />
-        <Dropdown
-          options={familyOptions}
-          value={newFontFamily}
-          onChange={handleFamilyChange}
-        />
-
-        <VerticalSpace space="medium" />
-
-        <Text>
-          <strong>Font Style</strong>
-        </Text>
-        <VerticalSpace space="small" />
-        <Dropdown
-          options={styleOptions}
-          value={newFontStyle}
-          onChange={handleStyleChange}
-          disabled={!newFontFamily}
-        />
-
-        <VerticalSpace space="large" />
-
-        <Toggle value={updateLineHeight} onValueChange={setUpdateLineHeight}>
-          <Text>Update Line Height</Text>
-        </Toggle>
-        {updateLineHeight && (
-          <div>
-            <VerticalSpace space="small" />
-            <TextboxNumeric
-              placeholder="Line height (px)"
-              value={newLineHeight}
-              onValueInput={setNewLineHeight}
-            />
+        <div class="modal__body">
+          {/* Current Font Preview */}
+          <div class="form-group">
+            <label class="form-label">Current Font</label>
+            <div class="card-row">
+              <div class="card-row__preview">Aa</div>
+              <div class="card-row__content">
+                <div class="card-row__title">
+                  {fontMetadata.font.family} — {fontMetadata.font.style}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
 
-        <VerticalSpace space="medium" />
-
-        <Toggle value={updateFontSize} onValueChange={setUpdateFontSize}>
-          <Text>Update Font Size</Text>
-        </Toggle>
-        {updateFontSize && (
-          <div>
-            <VerticalSpace space="small" />
-            <TextboxNumeric
-              placeholder="Font size (px)"
-              value={newFontSize}
-              onValueInput={setNewFontSize}
-            />
+          {/* New Font Family */}
+          <div class="form-group">
+            <label class="form-label">New Font Family</label>
+            <select
+              class="form-select"
+              value={newFontFamily}
+              onChange={handleFamilyChange}
+            >
+              <option value="">Select font family...</option>
+              {fontFamilies.map((family) => (
+                <option key={family} value={family}>
+                  {family}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
 
-        <VerticalSpace space="extraLarge" />
+          {/* Font Style */}
+          <div class="form-group">
+            <label class="form-label">Font Style</label>
+            <select
+              class="form-select"
+              value={newFontStyle}
+              onChange={handleStyleChange}
+              disabled={!newFontFamily}
+            >
+              <option value="">
+                {newFontFamily ? 'Select style...' : 'Select a family first'}
+              </option>
+              {fontStyles.map((style) => (
+                <option key={style} value={style}>
+                  {style}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="modal-actions">
-          <Button onClick={onClose} secondary fullWidth>
+          {/* Update Line Height Toggle */}
+          <div class="form-group">
+            <label class="form-checkbox">
+              <input
+                type="checkbox"
+                checked={updateLineHeight}
+                onChange={(e) => setUpdateLineHeight((e.target as HTMLInputElement).checked)}
+              />
+              <span class="form-checkbox__label">Update Line Height</span>
+            </label>
+
+            {updateLineHeight && (
+              <input
+                type="number"
+                class="form-input"
+                placeholder="Line height (px)"
+                value={newLineHeight}
+                onInput={handleLineHeightChange}
+              />
+            )}
+          </div>
+
+          {/* Update Font Size Toggle */}
+          <div class="form-group">
+            <label class="form-checkbox">
+              <input
+                type="checkbox"
+                checked={updateFontSize}
+                onChange={(e) => setUpdateFontSize((e.target as HTMLInputElement).checked)}
+              />
+              <span class="form-checkbox__label">Update Font Size</span>
+            </label>
+
+            {updateFontSize && (
+              <input
+                type="number"
+                class="form-input"
+                placeholder="Font size (px)"
+                value={newFontSize}
+                onInput={handleFontSizeChange}
+              />
+            )}
+          </div>
+        </div>
+
+        <div class="modal__footer">
+          <button class="btn btn--ghost" onClick={onClose}>
             Cancel
-          </Button>
-          <Button onClick={handleApply} disabled={!newFontFamily || !newFontStyle} fullWidth>
+          </button>
+          <button
+            class="btn btn--primary"
+            onClick={handleApply}
+            disabled={!newFontFamily || !newFontStyle}
+          >
             Apply
-          </Button>
+          </button>
         </div>
       </div>
-    </Modal>
+    </div>
   )
 }

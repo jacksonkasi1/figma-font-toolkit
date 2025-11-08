@@ -1,14 +1,10 @@
-import { render, Container, VerticalSpace, Tabs, TabsOption } from '@create-figma-plugin/ui'
-import { emit, on } from '@create-figma-plugin/utilities'
-import { h } from 'preact'
+import { h, render } from 'preact'
 import { useState, useCallback } from 'preact/hooks'
+import { emit, on } from '@create-figma-plugin/utilities'
 import type {
   ScanFontsHandler,
   FontsScannedHandler,
   ScanResult,
-  FontMetadata,
-  OccurrenceGroup,
-  GroupByType,
   ReplacementCompleteHandler,
   AvailableFontsHandler
 } from './types'
@@ -24,58 +20,77 @@ function Plugin() {
   const [availableFonts, setAvailableFonts] = useState<Font[]>([])
   const [isScanning, setIsScanning] = useState(false)
 
-  // Handle scan fonts
   const handleScan = useCallback(() => {
     setIsScanning(true)
     emit<ScanFontsHandler>('SCAN_FONTS')
   }, [])
 
-  // Listen for scan results
   on<FontsScannedHandler>('FONTS_SCANNED', (result: ScanResult) => {
     setScanResult(result)
     setIsScanning(false)
     setActiveTab('fonts')
   })
 
-  // Listen for available fonts
   on<AvailableFontsHandler>('AVAILABLE_FONTS', (fonts: Font[]) => {
     setAvailableFonts(fonts)
   })
 
-  // Listen for replacement complete
   on<ReplacementCompleteHandler>('REPLACEMENT_COMPLETE', () => {
-    // Rescan after replacement
     emit<ScanFontsHandler>('SCAN_FONTS')
   })
 
-  const tabsOptions: TabsOption[] = [
-    { value: 'home', children: <span>Home</span> },
-    { value: 'fonts', children: <span>Fonts</span> },
-    { value: 'groups', children: <span>Groups</span> }
-  ]
-
   return (
-    <Container space="medium">
-      <Tabs
-        options={tabsOptions}
-        value={activeTab}
-        onValueChange={setActiveTab}
-      />
-      <VerticalSpace space="medium" />
-      
-      {activeTab === 'home' && (
-        <HomeTab onScan={handleScan} isScanning={isScanning} scanResult={scanResult} />
-      )}
-      
-      {activeTab === 'fonts' && (
-        <FontsTab scanResult={scanResult} availableFonts={availableFonts} />
-      )}
-      
-      {activeTab === 'groups' && (
-        <GroupsTab scanResult={scanResult} />
-      )}
-    </Container>
+    <div class="container">
+      {/* Header */}
+      <header class="header">
+        <div class="header__title">
+          <svg class="header__icon" viewBox="0 0 20 20" fill="none">
+            <path d="M3 5H17M3 10H17M3 15H12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Font Toolkit
+        </div>
+      </header>
+
+      {/* Tabs */}
+      <nav class="tabs">
+        <button
+          class={activeTab === 'home' ? 'tab tab--active' : 'tab'}
+          onClick={() => setActiveTab('home')}
+        >
+          Home
+        </button>
+        <button
+          class={activeTab === 'fonts' ? 'tab tab--active' : 'tab'}
+          onClick={() => setActiveTab('fonts')}
+        >
+          Fonts
+        </button>
+        <button
+          class={activeTab === 'groups' ? 'tab tab--active' : 'tab'}
+          onClick={() => setActiveTab('groups')}
+        >
+          Groups
+        </button>
+      </nav>
+
+      {/* Content */}
+      <main class="content">
+        {activeTab === 'home' && (
+          <HomeTab onScan={handleScan} isScanning={isScanning} scanResult={scanResult} />
+        )}
+
+        {activeTab === 'fonts' && (
+          <FontsTab scanResult={scanResult} availableFonts={availableFonts} />
+        )}
+
+        {activeTab === 'groups' && (
+          <GroupsTab scanResult={scanResult} />
+        )}
+      </main>
+    </div>
   )
 }
 
-export default render(Plugin)
+export default function () {
+  render(<Plugin />, document.getElementById('root') as HTMLElement)
+}

@@ -1,8 +1,6 @@
 import { h } from 'preact'
 import { useState, useCallback } from 'preact/hooks'
-import { Text, Muted, Textbox, VerticalSpace } from '@create-figma-plugin/ui'
 import type { ScanResult, FontMetadata } from '../types'
-import { FontItem } from './FontItem'
 import { ReplaceModal } from './ReplaceModal'
 
 interface FontsTabProps {
@@ -13,22 +11,19 @@ interface FontsTabProps {
 export function FontsTab({ scanResult, availableFonts }: FontsTabProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFont, setSelectedFont] = useState<FontMetadata | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleReplace = useCallback((font: FontMetadata) => {
     setSelectedFont(font)
-    setIsModalOpen(true)
   }, [])
 
   const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false)
     setSelectedFont(null)
   }, [])
 
   if (!scanResult) {
     return (
-      <div className="empty-state">
-        <Muted>No fonts scanned yet. Go to Home and click "Scan Fonts".</Muted>
+      <div class="empty-state">
+        <p>No fonts scanned yet. Go to Home and click "Scan Fonts".</p>
       </div>
     )
   }
@@ -40,38 +35,62 @@ export function FontsTab({ scanResult, availableFonts }: FontsTabProps) {
   })
 
   return (
-    <div className="fonts-tab">
-      <Textbox
-        icon={
-          <svg width="16" height="16" viewBox="0 0 16 16">
-            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        }
-        placeholder="Search fonts..."
-        value={searchQuery}
-        onValueInput={setSearchQuery}
-      />
-      
-      <VerticalSpace space="medium" />
-      
+    <div>
+      {/* Search */}
+      <div class="search-box">
+        <svg class="search-box__icon" viewBox="0 0 16 16" fill="none">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <input
+          type="text"
+          class="search-box__input"
+          placeholder="Search fonts..."
+          value={searchQuery}
+          onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+        />
+      </div>
+
+      {/* Font List */}
       {filteredFonts.length === 0 ? (
-        <div className="empty-state">
-          <Muted>No fonts found.</Muted>
+        <div class="empty-state">
+          <p>No fonts found.</p>
         </div>
       ) : (
-        <div className="font-list">
+        <div class="card-list">
           {filteredFonts.map((font) => (
-            <FontItem
-              key={`${font.font.family}-${font.font.style}`}
-              fontMetadata={font}
-              onReplace={() => handleReplace(font)}
-            />
+            <div key={`${font.font.family}-${font.font.style}`} class="card-row">
+              <div class="card-row__preview">Aa</div>
+
+              <div class="card-row__content">
+                <div class="card-row__title">
+                  {font.font.family} — {font.font.style}
+                </div>
+                <div class="card-row__meta">
+                  {font.count} ranges · {font.nodesCount} layers
+                </div>
+              </div>
+
+              <div class="card-row__badge">{font.count}</div>
+
+              <div class="card-row__actions">
+                <button
+                  class="btn btn--ghost btn--small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleReplace(font)
+                  }}
+                >
+                  Replace
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}
-      
-      {isModalOpen && selectedFont && (
+
+      {/* Replace Modal */}
+      {selectedFont && (
         <ReplaceModal
           fontMetadata={selectedFont}
           availableFonts={availableFonts}

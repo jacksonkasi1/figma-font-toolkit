@@ -1,5 +1,4 @@
 import { h } from 'preact'
-import { Button, Text, VerticalSpace, Muted } from '@create-figma-plugin/ui'
 import type { ScanResult } from '../types'
 
 interface HomeTabProps {
@@ -10,53 +9,39 @@ interface HomeTabProps {
 
 export function HomeTab({ onScan, isScanning, scanResult }: HomeTabProps) {
   return (
-    <div className="home-tab">
-      <div className="welcome-card">
-        <div className="welcome-icon">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <path 
-              d="M8 12H40M8 24H40M8 36H28" 
-              stroke="currentColor" 
-              stroke-width="3" 
-              stroke-linecap="round"
-            />
-          </svg>
-        </div>
-        
-        <VerticalSpace space="large" />
-        
-        <Text>
-          <strong>Welcome to Font Toolkit</strong>
-        </Text>
-        
-        <VerticalSpace space="small" />
-        
-        <Muted>
-          Scan your selection to find all fonts, group them by attributes, and replace them easily.
-        </Muted>
-        
-        <VerticalSpace space="extraLarge" />
-        
-        <Button fullWidth onClick={onScan} disabled={isScanning}>
-          {isScanning ? 'Scanning...' : 'Scan Fonts in Selection'}
-        </Button>
-        
-        <VerticalSpace space="medium" />
-        
-        {scanResult && (
-          <div className="status-card">
-            <Muted>
-              Found {scanResult.fonts.length} fonts in {scanResult.totalNodes} layers
-            </Muted>
-          </div>
-        )}
-        
-        {!scanResult && (
-          <div className="status-card">
-            <Muted>Select layers and click scan to begin</Muted>
-          </div>
-        )}
+    <div class="welcome">
+      <div class="welcome__icon">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <path
+            d="M12 18H52M12 32H52M12 46H38"
+            stroke="currentColor"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+        </svg>
       </div>
+
+      <h2 class="welcome__title">Welcome to Font Toolkit</h2>
+
+      <p class="welcome__description">
+        Scan your selection to find all fonts, group them by attributes, and bulk update typography properties.
+      </p>
+
+      <button class="btn btn--primary welcome__button" onClick={onScan} disabled={isScanning}>
+        {isScanning ? 'Scanning...' : 'Scan Fonts in Selection'}
+      </button>
+
+      {scanResult && (
+        <div class="status">
+          Found {scanResult.fonts.length} fonts in {scanResult.totalNodes} layers
+        </div>
+      )}
+
+      {!scanResult && !isScanning && (
+        <div class="status">
+          Select layers and click scan to begin
+        </div>
+      )}
     </div>
   )
 }
