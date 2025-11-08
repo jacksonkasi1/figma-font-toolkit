@@ -2,6 +2,7 @@ import { h } from 'preact'
 import { useState, useCallback, useMemo } from 'preact/hooks'
 import { emit } from '@create-figma-plugin/utilities'
 import type { FontMetadata, ReplacementSpec, ApplyReplacementHandler, RequestAvailableFontsHandler } from '../types'
+import { Combobox } from './Combobox'
 
 interface ReplaceModalProps {
   fontMetadata: FontMetadata
@@ -37,14 +38,12 @@ export function ReplaceModal({ fontMetadata, availableFonts, onClose }: ReplaceM
       .sort()
   }, [newFontFamily, availableFonts])
 
-  const handleFamilyChange = useCallback((event: Event) => {
-    const value = (event.currentTarget as HTMLInputElement).value
+  const handleFamilyChange = useCallback((value: string) => {
     setNewFontFamily(value)
     setNewFontStyle('')
   }, [])
 
-  const handleStyleChange = useCallback((event: Event) => {
-    const value = (event.currentTarget as HTMLSelectElement).value
+  const handleStyleChange = useCallback((value: string) => {
     setNewFontStyle(value)
   }, [])
 
@@ -111,38 +110,24 @@ export function ReplaceModal({ fontMetadata, availableFonts, onClose }: ReplaceM
           {/* New Font Family */}
           <div class="form-group">
             <label class="form-label">New Font Family</label>
-            <select
-              class="form-select"
+            <Combobox
+              options={fontFamilies}
               value={newFontFamily}
+              placeholder="Search or select font family..."
               onChange={handleFamilyChange}
-            >
-              <option value="">Select font family...</option>
-              {fontFamilies.map((family) => (
-                <option key={family} value={family}>
-                  {family}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Font Style */}
           <div class="form-group">
             <label class="form-label">Font Style</label>
-            <select
-              class="form-select"
+            <Combobox
+              options={fontStyles}
               value={newFontStyle}
+              placeholder={newFontFamily ? 'Search or select style...' : 'Select a family first'}
               onChange={handleStyleChange}
               disabled={!newFontFamily}
-            >
-              <option value="">
-                {newFontFamily ? 'Select style...' : 'Select a family first'}
-              </option>
-              {fontStyles.map((style) => (
-                <option key={style} value={style}>
-                  {style}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Update Line Height Toggle */}
