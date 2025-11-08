@@ -11,7 +11,7 @@ export function HomeTab({ onScan, isScanning, scanResult }: HomeTabProps) {
   return (
     <div class="welcome">
       <div class="welcome__icon">
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
           <path
             d="M12 18H52M12 32H52M12 46H38"
             stroke="currentColor"
@@ -21,7 +21,7 @@ export function HomeTab({ onScan, isScanning, scanResult }: HomeTabProps) {
         </svg>
       </div>
 
-      <h2 class="welcome__title">Welcome to Font Toolkit</h2>
+      <h2 class="welcome__title">Font Toolkit</h2>
 
       <p class="welcome__description">
         Scan your selection to find all fonts, group them by attributes, and bulk update typography properties.
