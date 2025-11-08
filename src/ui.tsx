@@ -1,5 +1,5 @@
 import { h, render } from 'preact'
-import { useState, useCallback } from 'preact/hooks'
+import { useState, useCallback, useEffect } from 'preact/hooks'
 import { emit, on } from '@create-figma-plugin/utilities'
 import type {
   ScanFontsHandler,
@@ -25,19 +25,29 @@ function Plugin() {
     emit<ScanFontsHandler>('SCAN_FONTS')
   }, [])
 
-  on<FontsScannedHandler>('FONTS_SCANNED', (result: ScanResult) => {
-    setScanResult(result)
-    setIsScanning(false)
-    setActiveTab('fonts')
-  })
+  useEffect(() => {
+    // Register event handlers
+    const unsubscribeScanned = on<FontsScannedHandler>('FONTS_SCANNED', (result: ScanResult) => {
+      setScanResult(result)
+      setIsScanning(false)
+      setActiveTab('fonts')
+    })
 
-  on<AvailableFontsHandler>('AVAILABLE_FONTS', (fonts: Font[]) => {
-    setAvailableFonts(fonts)
-  })
+    const unsubscribeFonts = on<AvailableFontsHandler>('AVAILABLE_FONTS', (fonts: Font[]) => {
+      setAvailableFonts(fonts)
+    })
 
-  on<ReplacementCompleteHandler>('REPLACEMENT_COMPLETE', () => {
-    emit<ScanFontsHandler>('SCAN_FONTS')
-  })
+    const unsubscribeComplete = on<ReplacementCompleteHandler>('REPLACEMENT_COMPLETE', () => {
+      emit<ScanFontsHandler>('SCAN_FONTS')
+    })
+
+    // Cleanup on unmount
+    return () => {
+      unsubscribeScanned()
+      unsubscribeFonts()
+      unsubscribeComplete()
+    }
+  }, [])
 
   return (
     <div class="container">
@@ -92,5 +102,14 @@ function Plugin() {
 }
 
 export default function () {
-  render(<Plugin />, document.getElementById('root') as HTMLElement)
+  const rootElement = document.getElementById('root')
+
+  if (!rootElement) {
+    const newRoot = document.createElement('div')
+    newRoot.id = 'root'
+    document.body.appendChild(newRoot)
+    render(<Plugin />, newRoot)
+  } else {
+    render(<Plugin />, rootElement)
+  }
 }
