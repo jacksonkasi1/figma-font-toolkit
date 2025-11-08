@@ -1,4 +1,4 @@
-import { h, render } from 'preact'
+import { h, render, Fragment } from 'preact'
 import { useState, useCallback, useEffect } from 'preact/hooks'
 import { emit, on } from '@create-figma-plugin/utilities'
 import type {
@@ -15,7 +15,7 @@ import { GroupsTab } from './components/GroupsTab'
 import '!./styles.css'
 
 function Plugin() {
-  const [activeTab, setActiveTab] = useState<string>('home')
+  const [activeTab, setActiveTab] = useState<string>('fonts')
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [availableFonts, setAvailableFonts] = useState<Font[]>([])
   const [isScanning, setIsScanning] = useState(false)
@@ -62,16 +62,31 @@ function Plugin() {
           </svg>
           Font Toolkit
         </div>
+        <button
+          class={isScanning ? 'header__scan-btn header__scan-btn--scanning' : 'header__scan-btn'}
+          onClick={handleScan}
+          disabled={isScanning}
+        >
+          {isScanning ? (
+            <Fragment>
+              <svg class="header__scan-icon header__scan-icon--spinning" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="30 8" />
+              </svg>
+              Scanning...
+            </Fragment>
+          ) : (
+            <Fragment>
+              <svg class="header__scan-icon" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2L8 14M2 8L14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Scan
+            </Fragment>
+          )}
+        </button>
       </header>
 
       {/* Tabs */}
       <nav class="tabs">
-        <button
-          class={activeTab === 'home' ? 'tab tab--active' : 'tab'}
-          onClick={() => setActiveTab('home')}
-        >
-          Home
-        </button>
         <button
           class={activeTab === 'fonts' ? 'tab tab--active' : 'tab'}
           onClick={() => setActiveTab('fonts')}
@@ -88,10 +103,6 @@ function Plugin() {
 
       {/* Content */}
       <main class="content">
-        {activeTab === 'home' && (
-          <HomeTab onScan={handleScan} isScanning={isScanning} scanResult={scanResult} />
-        )}
-
         {activeTab === 'fonts' && (
           <FontsTab scanResult={scanResult} availableFonts={availableFonts} />
         )}

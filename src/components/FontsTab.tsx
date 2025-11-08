@@ -20,10 +20,22 @@ export function FontsTab({ scanResult, availableFonts }: FontsTabProps) {
     setSelectedFont(null)
   }, [])
 
-  if (!scanResult) {
+  if (!scanResult || scanResult.fonts.length === 0) {
     return (
       <div class="empty-state">
-        <p>No fonts scanned yet. Go to Home and click "Scan Fonts".</p>
+        <svg class="empty-state__icon" viewBox="0 0 64 64" fill="none">
+          <path
+            d="M12 18H52M12 32H52M12 46H38"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            opacity="0.3"
+          />
+        </svg>
+        <h3 class="empty-state__title">No fonts found</h3>
+        <p class="empty-state__description">
+          Select text layers and click Scan to discover fonts
+        </p>
       </div>
     )
   }

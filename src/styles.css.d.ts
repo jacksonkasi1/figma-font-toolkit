@@ -14,6 +14,9 @@ declare const styles: {
   readonly "container": string;
   readonly "content": string;
   readonly "empty-state": string;
+  readonly "empty-state__description": string;
+  readonly "empty-state__icon": string;
+  readonly "empty-state__title": string;
   readonly "fadeIn": string;
   readonly "footer": string;
   readonly "footer__actions": string;
@@ -39,12 +42,20 @@ declare const styles: {
   readonly "group-item__content": string;
   readonly "group-item__header": string;
   readonly "group-item__title": string;
+  readonly "group-item__update": string;
   readonly "group-occurrence": string;
   readonly "group-occurrence__meta": string;
   readonly "group-occurrence__title": string;
   readonly "header": string;
   readonly "header__icon": string;
+  readonly "header__scan-btn": string;
+  readonly "header__scan-icon": string;
+  readonly "header__scan-icon--spinning": string;
   readonly "header__title": string;
+  readonly "inline-update": string;
+  readonly "inline-update__input": string;
+  readonly "inline-update__label": string;
+  readonly "inline-update__select": string;
   readonly "mb-2": string;
   readonly "mb-3": string;
   readonly "mb-4": string;
@@ -66,6 +77,7 @@ declare const styles: {
   readonly "search-box__input": string;
   readonly "slideUp": string;
   readonly "slideUpToast": string;
+  readonly "spin": string;
   readonly "status": string;
   readonly "tab": string;
   readonly "tab--active": string;

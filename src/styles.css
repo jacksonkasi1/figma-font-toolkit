@@ -93,6 +93,49 @@ body {
   color: var(--accent-primary);
 }
 
+.header__scan-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 0 var(--spacing-3);
+  height: 28px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.header__scan-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.header__scan-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.header__scan-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.header__scan-icon--spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ========== Tabs ========== */
 .tabs {
   display: flex;
@@ -442,6 +485,46 @@ body {
   color: var(--text-secondary);
 }
 
+.group-item__update {
+  padding: var(--spacing-3);
+  background: var(--bg-hover);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ========== Inline Update ========== */
+.inline-update {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.inline-update__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.inline-update__input,
+.inline-update__select {
+  flex: 1;
+  height: 28px;
+  padding: 0 var(--spacing-2);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  min-width: 100px;
+}
+
+.inline-update__input:focus,
+.inline-update__select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: var(--bg-card);
+}
+
 /* ========== Modal ========== */
 .modal-overlay {
   position: fixed;
@@ -732,9 +815,28 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: var(--spacing-6);
+  padding: var(--spacing-6) var(--spacing-4);
+  min-height: 200px;
+}
+
+.empty-state__icon {
+  width: 48px;
+  height: 48px;
   color: var(--text-muted);
-  font-size: 14px;
+  margin-bottom: var(--spacing-3);
+}
+
+.empty-state__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-1);
+}
+
+.empty-state__description {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 /* ========== Utility Classes ========== */
