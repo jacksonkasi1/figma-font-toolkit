@@ -11,6 +11,14 @@ declare const styles: {
   readonly "card-row__meta": string;
   readonly "card-row__preview": string;
   readonly "card-row__title": string;
+  readonly "combobox": string;
+  readonly "combobox__dropdown": string;
+  readonly "combobox__empty": string;
+  readonly "combobox__input": string;
+  readonly "combobox__input-wrapper": string;
+  readonly "combobox__option": string;
+  readonly "combobox__option--highlighted": string;
+  readonly "combobox__option--selected": string;
   readonly "container": string;
   readonly "content": string;
   readonly "empty-state": string;
@@ -56,6 +64,7 @@ declare const styles: {
   readonly "inline-update__input": string;
   readonly "inline-update__label": string;
   readonly "inline-update__select": string;
+  readonly "mb-1": string;
   readonly "mb-2": string;
   readonly "mb-3": string;
   readonly "mb-4": string;
@@ -66,6 +75,7 @@ declare const styles: {
   readonly "modal__header": string;
   readonly "modal__subtitle": string;
   readonly "modal__title": string;
+  readonly "mt-1": string;
   readonly "mt-2": string;
   readonly "mt-3": string;
   readonly "mt-4": string;
@@ -75,6 +85,7 @@ declare const styles: {
   readonly "search-box": string;
   readonly "search-box__icon": string;
   readonly "search-box__input": string;
+  readonly "slideDown": string;
   readonly "slideUp": string;
   readonly "slideUpToast": string;
   readonly "spin": string;
