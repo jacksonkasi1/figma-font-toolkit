@@ -30,7 +30,10 @@ function Plugin() {
     const unsubscribeScanned = on<FontsScannedHandler>('FONTS_SCANNED', (result: ScanResult) => {
       setScanResult(result)
       setIsScanning(false)
-      setActiveTab('fonts')
+      // Only switch to fonts tab if fonts were found
+      if (result.fonts.length > 0) {
+        setActiveTab('fonts')
+      }
     })
 
     const unsubscribeFonts = on<AvailableFontsHandler>('AVAILABLE_FONTS', (fonts: Font[]) => {

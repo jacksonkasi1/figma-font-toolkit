@@ -26,6 +26,17 @@ export default function () {
 
     if (selection.length === 0) {
       figma.notify('Please select at least one layer', { error: true })
+      // Emit empty result to reset UI scanning state
+      emit<FontsScannedHandler>('FONTS_SCANNED', {
+        fonts: [],
+        groups: {
+          lineHeight: [],
+          fontSize: [],
+          fontWeight: [],
+          fontFamily: []
+        },
+        totalNodes: 0
+      })
       return
     }
 
@@ -33,6 +44,17 @@ export default function () {
 
     if (occurrences.length === 0) {
       figma.notify('No text layers found in selection')
+      // Emit empty result to reset UI scanning state
+      emit<FontsScannedHandler>('FONTS_SCANNED', {
+        fonts: [],
+        groups: {
+          lineHeight: [],
+          fontSize: [],
+          fontWeight: [],
+          fontFamily: []
+        },
+        totalNodes: 0
+      })
       return
     }
 
@@ -329,6 +351,6 @@ export default function () {
 
   showUI({
     width: 380,
-    height: 600
+    height: 480
   })
 }
