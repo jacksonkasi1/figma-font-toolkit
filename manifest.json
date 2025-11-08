@@ -1,11 +1,1 @@
-{
-  "name": "Font Toolkit",
-  "id": "1234567890",
-  "api": "1.0.0",
-  "main": "dist/code.js",
-  "ui": "dist/ui.html",
-  "editorType": ["figma"],
-  "networkAccess": {
-    "allowedDomains": ["none"]
-  }
-}
+{"api":"1.0.0","editorType":["figma"],"id":"font-toolkit","name":"Font Toolkit","main":"build/main.js","ui":"build/ui.js","relaunchButtons":[{"name":"Open Font Toolkit","command":"open"}]}

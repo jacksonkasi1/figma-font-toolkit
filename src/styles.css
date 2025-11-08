@@ -1,0 +1,195 @@
+/* Custom styles for Font Toolkit */
+
+.home-tab {
+  padding: 0;
+}
+
+.welcome-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  background: var(--color-bg);
+  border-radius: 8px;
+  border: 1px solid var(--color-black-10);
+}
+
+.welcome-icon {
+  color: var(--color-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-card {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--color-black-6);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.fonts-tab,
+.groups-tab {
+  padding: 0;
+}
+
+.font-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.font-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-black-10);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.font-item:hover {
+  border-color: var(--color-black-30);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.font-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-black-60);
+  background: var(--color-black-6);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.font-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.font-info strong {
+  display: block;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.font-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: var(--color-black-6);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-black-60);
+  flex-shrink: 0;
+}
+
+.group-controls-card {
+  padding: 12px;
+  background: var(--color-bg);
+  border-radius: 6px;
+  border: 1px solid var(--color-black-10);
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-item {
+  background: var(--color-bg);
+  border: 1px solid var(--color-black-10);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.group-item:hover {
+  border-color: var(--color-black-30);
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.group-header:hover {
+  background: var(--color-black-6);
+}
+
+.group-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-content {
+  padding: 12px;
+  border-top: 1px solid var(--color-black-10);
+  background: var(--color-black-3);
+}
+
+.group-occurrence {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-black-6);
+}
+
+.group-occurrence:last-child {
+  border-bottom: none;
+}
+
+.group-occurrence strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 16px;
+  background: var(--color-bg);
+  border-radius: 8px;
+  border: 1px dashed var(--color-black-10);
+}
+
+.modal-content {
+  padding: 0;
+}
+
+.current-font-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-black-3);
+  border-radius: 6px;
+  border: 1px solid var(--color-black-10);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+}

@@ -2,30 +2,36 @@
   "name": "figma-font-toolkit",
   "version": "1.0.0",
   "description": "A minimal Figma plugin for font management and replacement",
-  "main": "dist/code.js",
-  "scripts": {
-    "build": "npm run build:plugin && npm run build:ui && npm run copy:assets",
-    "build:plugin": "esbuild src/plugin/index.ts --bundle --outfile=dist/code.js --target=es2020 --platform=neutral",
-    "build:ui": "esbuild src/ui/index.ts --bundle --outfile=dist/ui.js --target=es2020",
-    "copy:assets": "cp src/ui/index.html dist/ui.html && cp -r src/ui/styles dist/styles",
-    "watch": "concurrently \"npm run watch:plugin\" \"npm run watch:ui\"",
-    "watch:plugin": "esbuild src/plugin/index.ts --bundle --outfile=dist/code.js --target=es2020 --platform=neutral --watch",
-    "watch:ui": "esbuild src/ui/index.ts --bundle --outfile=dist/ui.js --target=es2020 --watch",
-    "dev": "npm run build && npm run watch"
-  },
-  "keywords": [
-    "figma",
-    "plugin",
-    "font",
-    "typography",
-    "toolkit"
-  ],
-  "author": "Font Toolkit Team",
   "license": "MIT",
+  "author": "Font Toolkit Team",
+  "scripts": {
+    "build": "build-figma-plugin --typecheck --minify",
+    "watch": "build-figma-plugin --typecheck --watch"
+  },
+  "dependencies": {
+    "@create-figma-plugin/ui": "^3.2.0",
+    "@create-figma-plugin/utilities": "^3.2.0",
+    "preact": "^10.23.1"
+  },
   "devDependencies": {
+    "@create-figma-plugin/build": "^3.2.0",
+    "@create-figma-plugin/tsconfig": "^3.2.0",
     "@figma/plugin-typings": "^1.90.0",
-    "concurrently": "^8.2.2",
-    "esbuild": "^0.25.12",
     "typescript": "^5.3.3"
+  },
+  "figma-plugin": {
+    "editorType": [
+      "figma"
+    ],
+    "id": "font-toolkit",
+    "name": "Font Toolkit",
+    "main": "src/main.ts",
+    "ui": "src/ui.tsx",
+    "relaunchButtons": {
+      "open": {
+        "name": "Open Font Toolkit",
+        "main": "src/main.ts"
+      }
+    }
   }
 }
