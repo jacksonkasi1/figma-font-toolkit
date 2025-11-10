@@ -1,0 +1,184 @@
+import { precomputeValues } from '@capsizecss/core'
+// Import some common font metrics
+import arialMetrics from '@capsizecss/metrics/arial'
+import helveticaMetrics from '@capsizecss/metrics/helvetica'
+import robotoMetrics from '@capsizecss/metrics/roboto'
+import interMetrics from '@capsizecss/metrics/inter'
+import openSansMetrics from '@capsizecss/metrics/openSans'
+import montserratMetrics from '@capsizecss/metrics/montserrat'
+import latoMetrics from '@capsizecss/metrics/lato'
+import poppinsMetrics from '@capsizecss/metrics/poppins'
+import ralewayMetrics from '@capsizecss/metrics/raleway'
+import sourceSans3Metrics from '@capsizecss/metrics/sourceSans3'
+
+// Map of common font families to their metrics
+const FONT_METRICS_MAP: Record<string, any> = {
+  'Arial': arialMetrics,
+  'Helvetica': helveticaMetrics,
+  'Helvetica Neue': helveticaMetrics,
+  'Roboto': robotoMetrics,
+  'Inter': interMetrics,
+  'Open Sans': openSansMetrics,
+  'Montserrat': montserratMetrics,
+  'Lato': latoMetrics,
+  'Poppins': poppinsMetrics,
+  'Raleway': ralewayMetrics,
+  'Source Sans 3': sourceSans3Metrics
+}
+
+/**
+ * Get font metrics for a given font family
+ */
+export function getFontMetrics(fontFamily: string): any | null {
+  // Try exact match first
+  if (FONT_METRICS_MAP[fontFamily]) {
+    return FONT_METRICS_MAP[fontFamily]
+  }
+
+  // Try case-insensitive match
+  const normalizedFamily = fontFamily.toLowerCase()
+  for (const [key, value] of Object.entries(FONT_METRICS_MAP)) {
+    if (key.toLowerCase() === normalizedFamily) {
+      return value
+    }
+  }
+
+  return null
+}
+
+/**
+ * Calculate trim values for text
+ */
+export function calculateTrimValues(
+  fontSize: number,
+  lineHeightPx: number,
+  fontMetrics: any
+): { topTrim: number; bottomTrim: number } {
+  try {
+    // Use Capsize to calculate the trim values
+    const capsizeValues = precomputeValues({
+      fontSize,
+      leading: lineHeightPx,
+      fontMetrics
+    })
+
+    // Calculate pixel margins from Capsize values
+    const topTrim = Math.round(parseFloat(capsizeValues.capHeightTrim as string) * fontSize)
+    const bottomTrim = Math.round(parseFloat(capsizeValues.baselineTrim as string) * fontSize)
+
+    return {
+      topTrim: Math.abs(topTrim),
+      bottomTrim: Math.abs(bottomTrim)
+    }
+  } catch (error) {
+    console.error('Error calculating trim values:', error)
+    return { topTrim: 0, bottomTrim: 0 }
+  }
+}
+
+/**
+ * Check if a text node has mixed fonts
+ */
+export function hasMixedFonts(node: TextNode): boolean {
+  if (node.characters.length === 0) return false
+
+  const firstFont = node.getRangeFontName(0, 1)
+  if (firstFont === figma.mixed) return true
+
+  for (let i = 1; i < node.characters.length; i++) {
+    const currentFont = node.getRangeFontName(i, i + 1)
+    if (currentFont === figma.mixed) return true
+    if (typeof firstFont !== 'symbol' && typeof currentFont !== 'symbol') {
+      if (firstFont.family !== currentFont.family || firstFont.style !== currentFont.style) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+/**
+ * Check if a text node has mixed font sizes
+ */
+export function hasMixedFontSizes(node: TextNode): boolean {
+  if (node.characters.length === 0) return false
+
+  const firstSize = node.getRangeFontSize(0, 1)
+  if (firstSize === figma.mixed) return true
+
+  for (let i = 1; i < node.characters.length; i++) {
+    const currentSize = node.getRangeFontSize(i, i + 1)
+    if (currentSize === figma.mixed) return true
+    if (currentSize !== firstSize) return true
+  }
+
+  return false
+}
+
+/**
+ * Check if a text node has mixed line heights
+ */
+export function hasMixedLineHeights(node: TextNode): boolean {
+  if (node.characters.length === 0) return false
+
+  const firstLineHeight = node.getRangeLineHeight(0, 1)
+  if (firstLineHeight === figma.mixed) return true
+
+  for (let i = 1; i < node.characters.length; i++) {
+    const currentLineHeight = node.getRangeLineHeight(i, i + 1)
+    if (currentLineHeight === figma.mixed) return true
+    if (typeof firstLineHeight !== 'symbol' && typeof currentLineHeight !== 'symbol') {
+      if (firstLineHeight.unit !== currentLineHeight.unit) {
+        return true
+      }
+      // Only compare values if the unit is PIXELS or PERCENT (AUTO doesn't have a value)
+      if (firstLineHeight.unit !== 'AUTO' && currentLineHeight.unit !== 'AUTO') {
+        if ('value' in firstLineHeight && 'value' in currentLineHeight) {
+          if (firstLineHeight.value !== currentLineHeight.value) {
+            return true
+          }
+        }
+      }
+    }
+  }
+
+  return false
+}
+
+/**
+ * Get the line height in pixels
+ */
+export function getLineHeightInPixels(node: TextNode): number {
+  const lineHeight = node.lineHeight
+
+  if (lineHeight === figma.mixed) {
+    // Use the first character's line height
+    const firstLineHeight = node.getRangeLineHeight(0, 1)
+    if (firstLineHeight !== figma.mixed) {
+      if (firstLineHeight.unit === 'PIXELS') {
+        return firstLineHeight.value
+      } else if (firstLineHeight.unit === 'PERCENT') {
+        const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
+        return (firstLineHeight.value / 100) * fontSize
+      } else {
+        // AUTO
+        const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
+        return fontSize * 1.2 // Default to 120%
+      }
+    }
+  } else {
+    if (lineHeight.unit === 'PIXELS') {
+      return lineHeight.value
+    } else if (lineHeight.unit === 'PERCENT') {
+      const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
+      return (lineHeight.value / 100) * fontSize
+    } else {
+      // AUTO
+      const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
+      return fontSize * 1.2 // Default to 120%
+    }
+  }
+
+  return 16 * 1.2 // Fallback
+}

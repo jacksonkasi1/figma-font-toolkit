@@ -99,3 +99,31 @@ export interface BulkUpdateHandler extends EventHandler {
   name: 'BULK_UPDATE'
   handler: (spec: BulkUpdateSpec) => void
 }
+
+// Trim-related types
+export interface TrimmedTextInfo {
+  nodeId: string
+  nodeName: string
+  font: FoundFont
+  fontSize: number
+  lineHeight: number
+  topTrim: number
+  bottomTrim: number
+}
+
+export interface TrimResult {
+  success: boolean
+  trimmedNodes: number
+  trimmedTexts: TrimmedTextInfo[]
+  errors: string[]
+}
+
+export interface TrimTextHandler extends EventHandler {
+  name: 'TRIM_TEXT'
+  handler: () => void
+}
+
+export interface TrimCompleteHandler extends EventHandler {
+  name: 'TRIM_COMPLETE'
+  handler: (result: TrimResult) => void
+}
