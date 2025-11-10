@@ -584,7 +584,7 @@ export default function () {
     // Import trim utilities
     const {
       getLineHeightInPixels,
-      isLineHeightTooTight,
+      checkLineHeightIssue,
       getRecommendedLineHeight,
       calculateLineOverlap
     } = await import('./utilities/trim-utilities')
@@ -622,8 +622,7 @@ export default function () {
         if (fontSize === figma.mixed) continue
 
         const lineHeightPx = getLineHeightInPixels(textNode)
-        const lineHeightRatio = lineHeightPx / fontSize
-        const isTooTight = isLineHeightTooTight(fontSize, lineHeightPx)
+        const issue = checkLineHeightIssue(fontSize, lineHeightPx)
         const recommendedLineHeight = getRecommendedLineHeight(fontSize)
         const overlapAmount = calculateLineOverlap(fontSize, lineHeightPx)
 
@@ -634,14 +633,15 @@ export default function () {
           fontStyle: fontName.style,
           fontSize,
           lineHeight: lineHeightPx,
-          lineHeightRatio,
-          hasIssue: isTooTight,
-          recommendedLineHeight: isTooTight ? recommendedLineHeight : undefined,
-          overlapAmount: isTooTight ? overlapAmount : undefined
+          lineHeightRatio: issue.ratio,
+          hasIssue: issue.hasIssue,
+          issueType: issue.issueType,
+          recommendedLineHeight: issue.hasIssue ? recommendedLineHeight : undefined,
+          overlapAmount: issue.hasIssue ? overlapAmount : undefined
         })
 
         result.totalScanned++
-        if (isTooTight) {
+        if (issue.hasIssue) {
           result.issuesFound++
         }
       } catch (error) {
@@ -650,9 +650,9 @@ export default function () {
     }
 
     if (result.issuesFound > 0) {
-      figma.notify(`Found ${result.issuesFound} text layer${result.issuesFound === 1 ? '' : 's'} with tight line height`)
+      figma.notify(`Found ${result.issuesFound} line height issue${result.issuesFound === 1 ? '' : 's'}`)
     } else {
-      figma.notify('All line heights look good!')
+      figma.notify('All line heights are optimal!')
     }
 
     emit<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', result)

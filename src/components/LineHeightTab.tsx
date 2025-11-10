@@ -46,7 +46,7 @@ export function LineHeightTab() {
           Line Height
         </h3>
         <p style={{ margin: '0', fontSize: '10px', color: 'var(--color-text-secondary)' }}>
-          Fix tight spacing that causes overlap
+          Detect spacing that's too tight or too loose
         </p>
       </div>
 
@@ -76,60 +76,65 @@ export function LineHeightTab() {
 
               {/* Issues List */}
               <div class="card-list" style={{ maxHeight: '320px', overflowY: 'auto' }}>
-                {issuesOnly.map((layer) => (
-                  <div
-                    key={layer.nodeId}
-                    class="card-row"
-                    style={{
-                      backgroundColor: 'var(--color-bg-warning-subtle)',
-                      cursor: 'pointer',
-                      padding: '8px'
-                    }}
-                    onClick={() => handleSelectNode(layer.nodeId)}
-                  >
-                    <div class="card-row__content">
-                      <div class="card-row__title" style={{ fontSize: '11px', fontWeight: 600 }}>
-                        {layer.nodeName}
-                      </div>
-                      <div style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
-                        {layer.fontSize}px · LH: {layer.lineHeight.toFixed(0)}px (Ratio: {layer.lineHeightRatio.toFixed(2)})
-                      </div>
+                {issuesOnly.map((layer) => {
+                  const isTooTight = layer.issueType === 'TOO_TIGHT'
+                  const issueText = isTooTight ? 'Too tight (overlap)' : 'Too loose (disconnected)'
 
-                      <div style={{
-                        marginTop: '6px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}>
-                        <div style={{ fontSize: '10px', color: 'var(--color-text)' }}>
-                          Fix: {layer.recommendedLineHeight}px
+                  return (
+                    <div
+                      key={layer.nodeId}
+                      class="card-row"
+                      style={{
+                        backgroundColor: 'var(--color-bg-warning-subtle)',
+                        cursor: 'pointer',
+                        padding: '8px'
+                      }}
+                      onClick={() => handleSelectNode(layer.nodeId)}
+                    >
+                      <div class="card-row__content">
+                        <div class="card-row__title" style={{ fontSize: '11px', fontWeight: 600 }}>
+                          {layer.nodeName}
                         </div>
-                        <button
-                          class="btn btn--secondary"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleFix(layer.nodeId, layer.recommendedLineHeight!)
-                          }}
-                          disabled={fixingNodeId === layer.nodeId}
-                          style={{
-                            padding: '2px 8px',
-                            fontSize: '10px',
-                            minHeight: 'auto'
-                          }}
-                        >
-                          {fixingNodeId === layer.nodeId ? 'Fixing...' : 'Fix'}
-                        </button>
+                        <div style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                          {layer.fontSize}px · LH: {layer.lineHeight.toFixed(0)}px · {layer.lineHeightRatio.toFixed(2)}× {issueText}
+                        </div>
+
+                        <div style={{
+                          marginTop: '6px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          <div style={{ fontSize: '10px', color: 'var(--color-text)' }}>
+                            Fix: {layer.recommendedLineHeight}px
+                          </div>
+                          <button
+                            class="btn btn--secondary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleFix(layer.nodeId, layer.recommendedLineHeight!)
+                            }}
+                            disabled={fixingNodeId === layer.nodeId}
+                            style={{
+                              padding: '2px 8px',
+                              fontSize: '10px',
+                              minHeight: 'auto'
+                            }}
+                          >
+                            {fixingNodeId === layer.nodeId ? 'Fixing...' : 'Fix'}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           ) : (
             <div style={{ padding: '12px', backgroundColor: 'var(--color-bg-success-subtle)' }}>
               <div style={{ fontSize: '11px', color: 'var(--color-text-success)', fontWeight: 600 }}>
-                ✓ No issues found
+                ✓ All line heights are optimal
               </div>
             </div>
           )}

@@ -235,31 +235,66 @@ export function calculateUniversalLineHeight(fontSize: number, fontWeight?: numb
 }
 
 /**
+ * Line height ratio thresholds
+ */
+const MIN_RATIO = 1.3  // Below this = overlap risk
+const MAX_RATIO = 1.7  // Above this = disconnected lines
+const OPTIMAL_RATIO = 1.5  // The sweet spot
+
+/**
+ * Check line height and return issue type
+ * Returns: 'TOO_TIGHT' | 'TOO_LOOSE' | 'OPTIMAL' | null
+ */
+export function checkLineHeightIssue(fontSize: number, lineHeightPx: number): {
+  hasIssue: boolean
+  issueType: 'TOO_TIGHT' | 'TOO_LOOSE' | 'OPTIMAL'
+  ratio: number
+} {
+  const ratio = lineHeightPx / fontSize
+
+  if (ratio < MIN_RATIO) {
+    return {
+      hasIssue: true,
+      issueType: 'TOO_TIGHT',
+      ratio
+    }
+  } else if (ratio > MAX_RATIO) {
+    return {
+      hasIssue: true,
+      issueType: 'TOO_LOOSE',
+      ratio
+    }
+  } else {
+    return {
+      hasIssue: false,
+      issueType: 'OPTIMAL',
+      ratio
+    }
+  }
+}
+
+/**
  * Check if line height is too tight (causes selection highlight overlap)
  * Returns true if line height needs to be increased
+ * @deprecated Use checkLineHeightIssue instead
  */
 export function isLineHeightTooTight(fontSize: number, lineHeightPx: number): boolean {
   const ratio = lineHeightPx / fontSize
-
-  // Line height ratio should be at least 1.5 for proper spacing
-  // Ratio below 1.5 causes selection highlights to overlap (darker blue line between rows)
-  return ratio < 1.5
+  return ratio < MIN_RATIO
 }
 
 /**
  * Get recommended line height based on font size
  */
 export function getRecommendedLineHeight(fontSize: number): number {
-  return Math.round(calculateUniversalLineHeight(fontSize))
+  return Math.round(fontSize * OPTIMAL_RATIO)
 }
 
 /**
- * Calculate the overlap amount between lines
+ * Calculate the spacing issue amount
  */
 export function calculateLineOverlap(fontSize: number, lineHeightPx: number): number {
   const recommendedLineHeight = getRecommendedLineHeight(fontSize)
-  const deficit = recommendedLineHeight - lineHeightPx
-
-  // If deficit is positive, lines are too close (overlapping)
-  return Math.max(0, deficit)
+  const difference = Math.abs(recommendedLineHeight - lineHeightPx)
+  return Math.round(difference)
 }
