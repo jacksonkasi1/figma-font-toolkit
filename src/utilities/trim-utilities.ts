@@ -204,3 +204,62 @@ export function getLineHeightInPixels(node: TextNode): number {
 
   return 16 * 1.2 // Fallback
 }
+
+/**
+ * Calculate universal line height using the golden ratio formula
+ * This ensures proper spacing to prevent selection highlight overlap
+ */
+export function calculateUniversalLineHeight(fontSize: number, fontWeight?: number): number {
+  // Base multiplier using standard 1.5 ratio for body text
+  let multiplier = 1.5
+
+  // Adjust for font weight if provided
+  if (fontWeight) {
+    if (fontWeight <= 300) {       // Light
+      multiplier = 1.45
+    } else if (fontWeight <= 400) { // Regular
+      multiplier = 1.5
+    } else if (fontWeight <= 600) { // Medium/Semibold
+      multiplier = 1.55
+    } else {                        // Bold/Black
+      multiplier = 1.6
+    }
+  }
+
+  // Calculate with minimum clearance
+  const minClearance = 8 // pixels (minimum spacing to prevent overlap)
+  const calculated = fontSize * multiplier
+
+  // Ensure minimum absolute spacing
+  return Math.max(calculated, fontSize + minClearance)
+}
+
+/**
+ * Check if line height is too tight (causes selection highlight overlap)
+ * Returns true if line height needs to be increased
+ */
+export function isLineHeightTooTight(fontSize: number, lineHeightPx: number): boolean {
+  const ratio = lineHeightPx / fontSize
+
+  // Line height ratio should be at least 1.5 for proper spacing
+  // Ratio below 1.5 causes selection highlights to overlap (darker blue line between rows)
+  return ratio < 1.5
+}
+
+/**
+ * Get recommended line height based on font size
+ */
+export function getRecommendedLineHeight(fontSize: number): number {
+  return Math.round(calculateUniversalLineHeight(fontSize))
+}
+
+/**
+ * Calculate the overlap amount between lines
+ */
+export function calculateLineOverlap(fontSize: number, lineHeightPx: number): number {
+  const recommendedLineHeight = getRecommendedLineHeight(fontSize)
+  const deficit = recommendedLineHeight - lineHeightPx
+
+  // If deficit is positive, lines are too close (overlapping)
+  return Math.max(0, deficit)
+}
