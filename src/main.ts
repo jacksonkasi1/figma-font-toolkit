@@ -356,7 +356,8 @@ export default function () {
       success: false,
       trimmedNodes: 0,
       trimmedTexts: [],
-      errors: []
+      errors: [],
+      warnings: []
     }
 
     if (selection.length === 0) {
@@ -373,7 +374,10 @@ export default function () {
       hasMixedFonts,
       hasMixedFontSizes,
       hasMixedLineHeights,
-      getLineHeightInPixels
+      getLineHeightInPixels,
+      isLineHeightTooTight,
+      getRecommendedLineHeight,
+      calculateLineOverlap
     } = await import('./utilities/trim-utilities')
 
     // Recursive function to find all text nodes
@@ -455,12 +459,28 @@ export default function () {
         // Calculate trim values
         const { topTrim, bottomTrim } = calculateTrimValues(fontSize, lineHeightPx, fontMetrics)
 
+        // Check if line height is too tight (causes overlap)
+        const lineHeightRatio = lineHeightPx / fontSize
+        const isTooTight = isLineHeightTooTight(fontSize, lineHeightPx)
+        const recommendedLineHeight = getRecommendedLineHeight(fontSize)
+        const overlapAmount = calculateLineOverlap(fontSize, lineHeightPx)
+
         // Debug: Log the calculated trim values
         console.log(`[Trim Debug] Calculated trims:`, {
           topTrim,
           bottomTrim,
-          ratio: lineHeightPx / fontSize
+          ratio: lineHeightRatio,
+          isTooTight,
+          recommendedLineHeight,
+          overlapAmount
         })
+
+        // Add warning if line height is too tight
+        if (isTooTight) {
+          const warning = `${textNode.name}: Line height ${lineHeightPx.toFixed(0)}px is too tight for ${fontSize}px font (ratio: ${lineHeightRatio.toFixed(2)}). Recommended: ${recommendedLineHeight}px to prevent selection highlight overlap.`
+          result.warnings.push(warning)
+          console.warn(`[Line Height Warning] ${warning}`)
+        }
 
         if (topTrim === 0 && bottomTrim === 0) {
           result.errors.push(`${textNode.name}: Could not calculate trim values`)
@@ -536,7 +556,11 @@ export default function () {
           fontSize,
           lineHeight: lineHeightPx,
           topTrim,
-          bottomTrim
+          bottomTrim,
+          hasLineHeightWarning: isTooTight,
+          recommendedLineHeight: isTooTight ? recommendedLineHeight : undefined,
+          lineHeightRatio,
+          overlapAmount: isTooTight ? overlapAmount : undefined
         })
 
         result.trimmedNodes++

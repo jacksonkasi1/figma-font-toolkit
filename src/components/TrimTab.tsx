@@ -33,7 +33,7 @@ export function TrimTab() {
         </h3>
         <p style={{ margin: '0', fontSize: '11px', color: 'var(--color-text-secondary)', lineHeight: '1.5' }}>
           Remove extra whitespace (half-leading) from text layers using font metrics.
-          Select text layers and click Trim to fix line height spacing issues.
+          Also detects tight line heights that cause selection highlight overlap (darker blue lines between rows).
         </p>
       </div>
 
@@ -79,17 +79,42 @@ export function TrimTab() {
                 </div>
               </div>
 
+              {/* Line Height Warnings */}
+              {trimResult.warnings && trimResult.warnings.length > 0 && (
+                <div style={{ padding: '16px', backgroundColor: 'var(--color-bg-warning-subtle)', borderTop: '1px solid var(--color-border)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-warning)', fontWeight: 600, marginBottom: '8px' }}>
+                    ⚠ Line Height Warnings
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
+                    These text layers have line heights that are too tight and may cause selection highlight overlap (darker blue lines between rows):
+                  </div>
+                  <ul style={{ margin: '0', paddingLeft: '16px', fontSize: '10px', color: 'var(--color-text)' }}>
+                    {trimResult.warnings.map((warning, idx) => (
+                      <li key={idx} style={{ marginBottom: '4px' }}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {/* Trimmed Text List */}
               {trimResult.trimmedTexts.length > 0 && (
                 <div class="card-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                   {trimResult.trimmedTexts.map((text) => (
-                    <div key={text.nodeId} class="card-row">
+                    <div key={text.nodeId} class="card-row" style={{
+                      backgroundColor: text.hasLineHeightWarning ? 'var(--color-bg-warning-subtle)' : undefined
+                    }}>
                       <div class="card-row__content">
                         <div class="card-row__title" style={{ fontSize: '12px' }}>
+                          {text.hasLineHeightWarning && <span style={{ color: 'var(--color-text-warning)', marginRight: '4px' }}>⚠</span>}
                           {text.nodeName}
                         </div>
                         <div class="card-row__meta" style={{ fontSize: '10px' }}>
                           {text.font.family} — {text.font.style} · {text.fontSize}px · LH: {text.lineHeight.toFixed(1)}px
+                          {text.hasLineHeightWarning && text.lineHeightRatio && (
+                            <span style={{ color: 'var(--color-text-warning)', marginLeft: '4px' }}>
+                              (Ratio: {text.lineHeightRatio.toFixed(2)})
+                            </span>
+                          )}
                         </div>
                         <div style={{
                           fontSize: '10px',
@@ -99,6 +124,18 @@ export function TrimTab() {
                         }}>
                           Top: -{text.topTrim.toFixed(2)}px · Bottom: -{text.bottomTrim.toFixed(2)}px
                         </div>
+                        {text.hasLineHeightWarning && text.recommendedLineHeight && (
+                          <div style={{
+                            fontSize: '10px',
+                            marginTop: '4px',
+                            padding: '4px',
+                            backgroundColor: 'var(--color-bg-warning)',
+                            borderRadius: '2px',
+                            color: 'var(--color-text-warning)'
+                          }}>
+                            ⚠ Recommended line height: {text.recommendedLineHeight}px (prevents overlap)
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

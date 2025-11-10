@@ -109,6 +109,11 @@ export interface TrimmedTextInfo {
   lineHeight: number
   topTrim: number
   bottomTrim: number
+  // Line height warnings
+  hasLineHeightWarning?: boolean
+  recommendedLineHeight?: number
+  lineHeightRatio?: number
+  overlapAmount?: number
 }
 
 export interface TrimResult {
@@ -116,6 +121,7 @@ export interface TrimResult {
   trimmedNodes: number
   trimmedTexts: TrimmedTextInfo[]
   errors: string[]
+  warnings: string[]
 }
 
 export interface TrimTextHandler extends EventHandler {
