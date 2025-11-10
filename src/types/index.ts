@@ -167,3 +167,12 @@ export interface FixLineHeightHandler extends EventHandler {
   name: 'FIX_LINE_HEIGHT'
   handler: (spec: FixLineHeightSpec) => void
 }
+
+export interface SelectNodeSpec {
+  nodeId: string
+}
+
+export interface SelectNodeHandler extends EventHandler {
+  name: 'SELECT_NODE'
+  handler: (spec: SelectNodeSpec) => void
+}

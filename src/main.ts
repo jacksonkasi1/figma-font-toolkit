@@ -13,6 +13,7 @@ import type {
   ScanLineHeightsHandler,
   LineHeightScanCompleteHandler,
   FixLineHeightHandler,
+  SelectNodeHandler,
   ReplacementSpec,
   ReplacementResult,
   BulkUpdateSpec,
@@ -20,7 +21,8 @@ import type {
   TrimmedTextInfo,
   FontOccurrence,
   LineHeightScanResult,
-  FixLineHeightSpec
+  FixLineHeightSpec,
+  SelectNodeSpec
 } from './types'
 import {
   scanFontOccurrences,
@@ -690,6 +692,16 @@ export default function () {
       emit<ScanLineHeightsHandler>('SCAN_LINE_HEIGHTS')
     } catch (error) {
       figma.notify(`Failed to fix line height: ${error}`, { error: true })
+    }
+  })
+
+  // Handle select node request
+  on<SelectNodeHandler>('SELECT_NODE', function (spec: SelectNodeSpec) {
+    const node = figma.getNodeById(spec.nodeId)
+
+    if (node) {
+      figma.currentPage.selection = [node as SceneNode]
+      figma.viewport.scrollAndZoomIntoView([node as SceneNode])
     }
   })
 
