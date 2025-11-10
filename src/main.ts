@@ -10,12 +10,17 @@ import type {
   BulkUpdateHandler,
   TrimTextHandler,
   TrimCompleteHandler,
+  ScanLineHeightsHandler,
+  LineHeightScanCompleteHandler,
+  FixLineHeightHandler,
   ReplacementSpec,
   ReplacementResult,
   BulkUpdateSpec,
   TrimResult,
   TrimmedTextInfo,
-  FontOccurrence
+  FontOccurrence,
+  LineHeightScanResult,
+  FixLineHeightSpec
 } from './types'
 import {
   scanFontOccurrences,
@@ -356,8 +361,7 @@ export default function () {
       success: false,
       trimmedNodes: 0,
       trimmedTexts: [],
-      errors: [],
-      warnings: []
+      errors: []
     }
 
     if (selection.length === 0) {
@@ -374,10 +378,7 @@ export default function () {
       hasMixedFonts,
       hasMixedFontSizes,
       hasMixedLineHeights,
-      getLineHeightInPixels,
-      isLineHeightTooTight,
-      getRecommendedLineHeight,
-      calculateLineOverlap
+      getLineHeightInPixels
     } = await import('./utilities/trim-utilities')
 
     // Recursive function to find all text nodes
@@ -459,28 +460,12 @@ export default function () {
         // Calculate trim values
         const { topTrim, bottomTrim } = calculateTrimValues(fontSize, lineHeightPx, fontMetrics)
 
-        // Check if line height is too tight (causes overlap)
-        const lineHeightRatio = lineHeightPx / fontSize
-        const isTooTight = isLineHeightTooTight(fontSize, lineHeightPx)
-        const recommendedLineHeight = getRecommendedLineHeight(fontSize)
-        const overlapAmount = calculateLineOverlap(fontSize, lineHeightPx)
-
         // Debug: Log the calculated trim values
         console.log(`[Trim Debug] Calculated trims:`, {
           topTrim,
           bottomTrim,
-          ratio: lineHeightRatio,
-          isTooTight,
-          recommendedLineHeight,
-          overlapAmount
+          ratio: lineHeightPx / fontSize
         })
-
-        // Add warning if line height is too tight
-        if (isTooTight) {
-          const warning = `${textNode.name}: Line height ${lineHeightPx.toFixed(0)}px is too tight for ${fontSize}px font (ratio: ${lineHeightRatio.toFixed(2)}). Recommended: ${recommendedLineHeight}px to prevent selection highlight overlap.`
-          result.warnings.push(warning)
-          console.warn(`[Line Height Warning] ${warning}`)
-        }
 
         if (topTrim === 0 && bottomTrim === 0) {
           result.errors.push(`${textNode.name}: Could not calculate trim values`)
@@ -556,11 +541,7 @@ export default function () {
           fontSize,
           lineHeight: lineHeightPx,
           topTrim,
-          bottomTrim,
-          hasLineHeightWarning: isTooTight,
-          recommendedLineHeight: isTooTight ? recommendedLineHeight : undefined,
-          lineHeightRatio,
-          overlapAmount: isTooTight ? overlapAmount : undefined
+          bottomTrim
         })
 
         result.trimmedNodes++
@@ -580,6 +561,136 @@ export default function () {
     }
 
     emit<TrimCompleteHandler>('TRIM_COMPLETE', result)
+  })
+
+  // Handle line height scan request
+  on<ScanLineHeightsHandler>('SCAN_LINE_HEIGHTS', async function () {
+    const selection = figma.currentPage.selection
+
+    const result: LineHeightScanResult = {
+      totalScanned: 0,
+      issuesFound: 0,
+      textLayers: []
+    }
+
+    if (selection.length === 0) {
+      figma.notify('Please select at least one text layer', { error: true })
+      emit<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', result)
+      return
+    }
+
+    // Import trim utilities
+    const {
+      getLineHeightInPixels,
+      isLineHeightTooTight,
+      getRecommendedLineHeight,
+      calculateLineOverlap
+    } = await import('./utilities/trim-utilities')
+
+    // Recursive function to find all text nodes
+    function findAllTextNodes(nodes: readonly SceneNode[]): TextNode[] {
+      const textNodes: TextNode[] = []
+
+      for (const node of nodes) {
+        if (node.type === 'TEXT') {
+          textNodes.push(node as TextNode)
+        } else if ('children' in node) {
+          textNodes.push(...findAllTextNodes(node.children))
+        }
+      }
+
+      return textNodes
+    }
+
+    const textNodes = findAllTextNodes(selection)
+
+    if (textNodes.length === 0) {
+      figma.notify('No text layers found in selection', { error: true })
+      emit<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', result)
+      return
+    }
+
+    // Process each text node
+    for (const textNode of textNodes) {
+      try {
+        const fontName = textNode.fontName
+        if (fontName === figma.mixed) continue
+
+        const fontSize = textNode.fontSize
+        if (fontSize === figma.mixed) continue
+
+        const lineHeightPx = getLineHeightInPixels(textNode)
+        const lineHeightRatio = lineHeightPx / fontSize
+        const isTooTight = isLineHeightTooTight(fontSize, lineHeightPx)
+        const recommendedLineHeight = getRecommendedLineHeight(fontSize)
+        const overlapAmount = calculateLineOverlap(fontSize, lineHeightPx)
+
+        result.textLayers.push({
+          nodeId: textNode.id,
+          nodeName: textNode.name,
+          fontFamily: fontName.family,
+          fontStyle: fontName.style,
+          fontSize,
+          lineHeight: lineHeightPx,
+          lineHeightRatio,
+          hasIssue: isTooTight,
+          recommendedLineHeight: isTooTight ? recommendedLineHeight : undefined,
+          overlapAmount: isTooTight ? overlapAmount : undefined
+        })
+
+        result.totalScanned++
+        if (isTooTight) {
+          result.issuesFound++
+        }
+      } catch (error) {
+        console.error(`Error scanning ${textNode.name}:`, error)
+      }
+    }
+
+    if (result.issuesFound > 0) {
+      figma.notify(`Found ${result.issuesFound} text layer${result.issuesFound === 1 ? '' : 's'} with tight line height`)
+    } else {
+      figma.notify('All line heights look good!')
+    }
+
+    emit<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', result)
+  })
+
+  // Handle fix line height request
+  on<FixLineHeightHandler>('FIX_LINE_HEIGHT', async function (spec: FixLineHeightSpec) {
+    try {
+      const node = figma.getNodeById(spec.nodeId) as TextNode | null
+
+      if (!node || node.type !== 'TEXT') {
+        figma.notify('Text layer not found', { error: true })
+        return
+      }
+
+      const fontName = node.fontName
+      if (fontName === figma.mixed) {
+        figma.notify('Cannot fix text with mixed fonts', { error: true })
+        return
+      }
+
+      // Load the font
+      await figma.loadFontAsync({
+        family: fontName.family,
+        style: fontName.style
+      })
+
+      // Apply the new line height
+      node.lineHeight = {
+        value: spec.newLineHeight,
+        unit: 'PIXELS'
+      }
+
+      figma.notify(`✓ Updated "${node.name}" line height to ${spec.newLineHeight}px`)
+
+      // Trigger rescan
+      emit<ScanLineHeightsHandler>('SCAN_LINE_HEIGHTS')
+    } catch (error) {
+      figma.notify(`Failed to fix line height: ${error}`, { error: true })
+    }
   })
 
   // Show UI

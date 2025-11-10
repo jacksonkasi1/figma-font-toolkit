@@ -13,6 +13,7 @@ import { HomeTab } from './components/HomeTab'
 import { FontsTab } from './components/FontsTab'
 import { GroupsTab } from './components/GroupsTab'
 import { TrimTab } from './components/TrimTab'
+import { LineHeightTab } from './components/LineHeightTab'
 
 import '!./styles.css'
 
@@ -102,6 +103,13 @@ function Plugin() {
           Groups
         </button>
         <button
+          class={activeTab === 'lineheight' ? 'tab tab--active' : 'tab'}
+          onClick={() => setActiveTab('lineheight')}
+          title="Line Height Overlap Detection"
+        >
+          LH
+        </button>
+        <button
           class={activeTab === 'trim' ? 'tab tab--active' : 'tab'}
           onClick={() => setActiveTab('trim')}
         >
@@ -117,6 +125,10 @@ function Plugin() {
 
         {activeTab === 'groups' && (
           <GroupsTab scanResult={scanResult} />
+        )}
+
+        {activeTab === 'lineheight' && (
+          <LineHeightTab />
         )}
 
         {activeTab === 'trim' && (

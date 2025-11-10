@@ -109,11 +109,6 @@ export interface TrimmedTextInfo {
   lineHeight: number
   topTrim: number
   bottomTrim: number
-  // Line height warnings
-  hasLineHeightWarning?: boolean
-  recommendedLineHeight?: number
-  lineHeightRatio?: number
-  overlapAmount?: number
 }
 
 export interface TrimResult {
@@ -121,7 +116,6 @@ export interface TrimResult {
   trimmedNodes: number
   trimmedTexts: TrimmedTextInfo[]
   errors: string[]
-  warnings: string[]
 }
 
 export interface TrimTextHandler extends EventHandler {
@@ -132,4 +126,44 @@ export interface TrimTextHandler extends EventHandler {
 export interface TrimCompleteHandler extends EventHandler {
   name: 'TRIM_COMPLETE'
   handler: (result: TrimResult) => void
+}
+
+// Line Height related types
+export interface LineHeightTextLayer {
+  nodeId: string
+  nodeName: string
+  fontFamily: string
+  fontStyle: string
+  fontSize: number
+  lineHeight: number
+  lineHeightRatio: number
+  hasIssue: boolean
+  recommendedLineHeight?: number
+  overlapAmount?: number
+}
+
+export interface LineHeightScanResult {
+  totalScanned: number
+  issuesFound: number
+  textLayers: LineHeightTextLayer[]
+}
+
+export interface ScanLineHeightsHandler extends EventHandler {
+  name: 'SCAN_LINE_HEIGHTS'
+  handler: () => void
+}
+
+export interface LineHeightScanCompleteHandler extends EventHandler {
+  name: 'LINE_HEIGHT_SCAN_COMPLETE'
+  handler: (result: LineHeightScanResult) => void
+}
+
+export interface FixLineHeightSpec {
+  nodeId: string
+  newLineHeight: number
+}
+
+export interface FixLineHeightHandler extends EventHandler {
+  name: 'FIX_LINE_HEIGHT'
+  handler: (spec: FixLineHeightSpec) => void
 }
