@@ -376,14 +376,23 @@ export default function () {
       getLineHeightInPixels
     } = await import('./utilities/trim-utilities')
 
-    const textNodes: TextNode[] = []
+    // Recursive function to find all text nodes
+    function findAllTextNodes(nodes: readonly SceneNode[]): TextNode[] {
+      const textNodes: TextNode[] = []
 
-    // Collect all text nodes from selection
-    for (const node of selection) {
-      if (node.type === 'TEXT') {
-        textNodes.push(node as TextNode)
+      for (const node of nodes) {
+        if (node.type === 'TEXT') {
+          textNodes.push(node as TextNode)
+        } else if ('children' in node) {
+          // Recursively search children
+          textNodes.push(...findAllTextNodes(node.children))
+        }
       }
+
+      return textNodes
     }
+
+    const textNodes = findAllTextNodes(selection)
 
     if (textNodes.length === 0) {
       result.errors.push('No text layers found in selection')
@@ -440,6 +449,17 @@ export default function () {
 
         if (topTrim === 0 && bottomTrim === 0) {
           result.errors.push(`${textNode.name}: Could not calculate trim values`)
+          continue
+        }
+
+        // Load the font before making any modifications
+        try {
+          await figma.loadFontAsync({
+            family: fontName.family,
+            style: fontName.style
+          })
+        } catch (error) {
+          result.errors.push(`${textNode.name}: Failed to load font "${fontName.family} ${fontName.style}"`)
           continue
         }
 
