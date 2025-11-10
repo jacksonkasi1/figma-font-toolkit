@@ -8,9 +8,13 @@ import type {
   RequestAvailableFontsHandler,
   AvailableFontsHandler,
   BulkUpdateHandler,
+  TrimTextHandler,
+  TrimCompleteHandler,
   ReplacementSpec,
   ReplacementResult,
   BulkUpdateSpec,
+  TrimResult,
+  TrimmedTextInfo,
   FontOccurrence
 } from './types'
 import {
@@ -342,6 +346,216 @@ export default function () {
   on<RequestAvailableFontsHandler>('REQUEST_AVAILABLE_FONTS', async function () {
     const availableFonts = await figma.listAvailableFontsAsync()
     emit<AvailableFontsHandler>('AVAILABLE_FONTS', availableFonts)
+  })
+
+  // Handle trim text request
+  on<TrimTextHandler>('TRIM_TEXT', async function () {
+    const selection = figma.currentPage.selection
+
+    const result: TrimResult = {
+      success: false,
+      trimmedNodes: 0,
+      trimmedTexts: [],
+      errors: []
+    }
+
+    if (selection.length === 0) {
+      result.errors.push('Please select at least one text layer')
+      figma.notify('Please select at least one text layer', { error: true })
+      emit<TrimCompleteHandler>('TRIM_COMPLETE', result)
+      return
+    }
+
+    // Import trim utilities dynamically to avoid circular dependencies
+    const {
+      getFontMetrics,
+      calculateTrimValues,
+      hasMixedFonts,
+      hasMixedFontSizes,
+      hasMixedLineHeights,
+      getLineHeightInPixels
+    } = await import('./utilities/trim-utilities')
+
+    // Recursive function to find all text nodes
+    function findAllTextNodes(nodes: readonly SceneNode[]): TextNode[] {
+      const textNodes: TextNode[] = []
+
+      for (const node of nodes) {
+        if (node.type === 'TEXT') {
+          textNodes.push(node as TextNode)
+        } else if ('children' in node) {
+          // Recursively search children
+          textNodes.push(...findAllTextNodes(node.children))
+        }
+      }
+
+      return textNodes
+    }
+
+    const textNodes = findAllTextNodes(selection)
+
+    if (textNodes.length === 0) {
+      result.errors.push('No text layers found in selection')
+      figma.notify('No text layers found in selection', { error: true })
+      emit<TrimCompleteHandler>('TRIM_COMPLETE', result)
+      return
+    }
+
+    // Process each text node
+    for (const textNode of textNodes) {
+      try {
+        // Validation checks
+        if (hasMixedFonts(textNode)) {
+          result.errors.push(`${textNode.name}: Text has mixed fonts, cannot trim`)
+          continue
+        }
+
+        if (hasMixedFontSizes(textNode)) {
+          result.errors.push(`${textNode.name}: Text has mixed font sizes, cannot trim`)
+          continue
+        }
+
+        if (hasMixedLineHeights(textNode)) {
+          result.errors.push(`${textNode.name}: Text has mixed line heights, cannot trim`)
+          continue
+        }
+
+        // Get text properties
+        const fontName = textNode.fontName
+        if (fontName === figma.mixed) {
+          result.errors.push(`${textNode.name}: Cannot determine font`)
+          continue
+        }
+
+        const fontSize = textNode.fontSize
+        if (fontSize === figma.mixed) {
+          result.errors.push(`${textNode.name}: Cannot determine font size`)
+          continue
+        }
+
+        const lineHeightPx = getLineHeightInPixels(textNode)
+
+        // Debug: Log the detected values
+        console.log(`[Trim Debug] ${textNode.name}:`, {
+          fontSize,
+          lineHeightPx,
+          fontFamily: fontName.family,
+          lineHeightRaw: textNode.lineHeight
+        })
+
+        // Get font metrics
+        const fontMetrics = getFontMetrics(fontName.family)
+        if (!fontMetrics) {
+          result.errors.push(
+            `${textNode.name}: Font "${fontName.family}" is not currently supported. Try Arial, Roboto, Inter, or other common fonts.`
+          )
+          continue
+        }
+
+        // Calculate trim values
+        const { topTrim, bottomTrim } = calculateTrimValues(fontSize, lineHeightPx, fontMetrics)
+
+        // Debug: Log the calculated trim values
+        console.log(`[Trim Debug] Calculated trims:`, {
+          topTrim,
+          bottomTrim,
+          ratio: lineHeightPx / fontSize
+        })
+
+        if (topTrim === 0 && bottomTrim === 0) {
+          result.errors.push(`${textNode.name}: Could not calculate trim values`)
+          continue
+        }
+
+        // Load the font before making any modifications
+        try {
+          await figma.loadFontAsync({
+            family: fontName.family,
+            style: fontName.style
+          })
+        } catch (error) {
+          result.errors.push(`${textNode.name}: Failed to load font "${fontName.family} ${fontName.style}"`)
+          continue
+        }
+
+        // Enable auto-resize if not already enabled
+        if (textNode.textAutoResize === 'NONE') {
+          textNode.textAutoResize = 'HEIGHT'
+        }
+
+        // Create a frame to wrap the text
+        const frame = figma.createFrame()
+        frame.name = `${textNode.name} (Trimmed)`
+        frame.layoutMode = 'VERTICAL'
+        frame.primaryAxisSizingMode = 'AUTO'
+        frame.counterAxisSizingMode = 'AUTO'
+        frame.paddingTop = 0
+        frame.paddingBottom = 0
+        frame.paddingLeft = 0
+        frame.paddingRight = 0
+        frame.fills = []
+        frame.clipsContent = false
+
+        // Position frame at text's location
+        frame.x = textNode.x - topTrim
+        frame.y = textNode.y - topTrim
+
+        // Get text's parent and index
+        const parent = textNode.parent
+        let insertIndex = 0
+        if (parent && 'children' in parent) {
+          insertIndex = parent.children.indexOf(textNode)
+        }
+
+        // Remove text from its current parent
+        if (parent && 'appendChild' in parent) {
+          frame.appendChild(textNode)
+        }
+
+        // Move text to origin within frame with negative offset
+        textNode.x = 0
+        textNode.y = -topTrim
+
+        // Calculate and set frame height
+        const trimmedHeight = lineHeightPx - topTrim - bottomTrim
+        frame.resize(textNode.width, trimmedHeight)
+
+        // Insert frame at the original position
+        if (parent && 'insertChild' in parent) {
+          parent.insertChild(insertIndex, frame)
+        }
+
+        // Store trim info
+        result.trimmedTexts.push({
+          nodeId: textNode.id,
+          nodeName: textNode.name,
+          font: {
+            family: fontName.family,
+            style: fontName.style
+          },
+          fontSize,
+          lineHeight: lineHeightPx,
+          topTrim,
+          bottomTrim
+        })
+
+        result.trimmedNodes++
+      } catch (error) {
+        result.errors.push(`${textNode.name}: ${error}`)
+      }
+    }
+
+    result.success = result.trimmedNodes > 0
+
+    if (result.success) {
+      figma.notify(
+        `Successfully trimmed ${result.trimmedNodes} text layer${result.trimmedNodes !== 1 ? 's' : ''}`
+      )
+    } else {
+      figma.notify('Failed to trim text layers', { error: true })
+    }
+
+    emit<TrimCompleteHandler>('TRIM_COMPLETE', result)
   })
 
   // Show UI

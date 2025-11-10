@@ -6,11 +6,13 @@ import type {
   FontsScannedHandler,
   ScanResult,
   ReplacementCompleteHandler,
-  AvailableFontsHandler
+  AvailableFontsHandler,
+  TrimCompleteHandler
 } from './types'
 import { HomeTab } from './components/HomeTab'
 import { FontsTab } from './components/FontsTab'
 import { GroupsTab } from './components/GroupsTab'
+import { TrimTab } from './components/TrimTab'
 
 import '!./styles.css'
 
@@ -99,6 +101,12 @@ function Plugin() {
         >
           Groups
         </button>
+        <button
+          class={activeTab === 'trim' ? 'tab tab--active' : 'tab'}
+          onClick={() => setActiveTab('trim')}
+        >
+          Trim
+        </button>
       </nav>
 
       {/* Content */}
@@ -109,6 +117,10 @@ function Plugin() {
 
         {activeTab === 'groups' && (
           <GroupsTab scanResult={scanResult} />
+        )}
+
+        {activeTab === 'trim' && (
+          <TrimTab />
         )}
       </main>
     </div>
