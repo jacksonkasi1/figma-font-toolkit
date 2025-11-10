@@ -62,9 +62,31 @@ export function calculateTrimValues(
       fontMetrics
     })
 
+    // Debug: Log what Capsize returned
+    console.log('[Capsize Debug] Raw values:', {
+      fontSize,
+      lineHeightPx,
+      capHeightTrim: capsizeValues.capHeightTrim,
+      baselineTrim: capsizeValues.baselineTrim,
+      fontMetrics: {
+        familyName: fontMetrics.familyName,
+        capHeight: fontMetrics.capHeight,
+        ascent: fontMetrics.ascent,
+        descent: fontMetrics.descent,
+        unitsPerEm: fontMetrics.unitsPerEm
+      }
+    })
+
     // Calculate pixel margins from Capsize values
     const topTrim = Math.round(parseFloat(capsizeValues.capHeightTrim as string) * fontSize)
     const bottomTrim = Math.round(parseFloat(capsizeValues.baselineTrim as string) * fontSize)
+
+    console.log('[Capsize Debug] Calculated:', {
+      topTrimRaw: parseFloat(capsizeValues.capHeightTrim as string) * fontSize,
+      bottomTrimRaw: parseFloat(capsizeValues.baselineTrim as string) * fontSize,
+      topTrimRounded: topTrim,
+      bottomTrimRounded: bottomTrim
+    })
 
     return {
       topTrim: Math.abs(topTrim),

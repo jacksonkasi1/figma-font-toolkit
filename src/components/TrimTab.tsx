@@ -89,7 +89,7 @@ export function TrimTab() {
                           {text.nodeName}
                         </div>
                         <div class="card-row__meta" style={{ fontSize: '10px' }}>
-                          {text.font.family} — {text.font.style} · {text.fontSize}px
+                          {text.font.family} — {text.font.style} · {text.fontSize}px · LH: {text.lineHeight.toFixed(1)}px
                         </div>
                         <div style={{
                           fontSize: '10px',

@@ -435,6 +435,14 @@ export default function () {
 
         const lineHeightPx = getLineHeightInPixels(textNode)
 
+        // Debug: Log the detected values
+        console.log(`[Trim Debug] ${textNode.name}:`, {
+          fontSize,
+          lineHeightPx,
+          fontFamily: fontName.family,
+          lineHeightRaw: textNode.lineHeight
+        })
+
         // Get font metrics
         const fontMetrics = getFontMetrics(fontName.family)
         if (!fontMetrics) {
@@ -446,6 +454,13 @@ export default function () {
 
         // Calculate trim values
         const { topTrim, bottomTrim } = calculateTrimValues(fontSize, lineHeightPx, fontMetrics)
+
+        // Debug: Log the calculated trim values
+        console.log(`[Trim Debug] Calculated trims:`, {
+          topTrim,
+          bottomTrim,
+          ratio: lineHeightPx / fontSize
+        })
 
         if (topTrim === 0 && bottomTrim === 0) {
           result.errors.push(`${textNode.name}: Could not calculate trim values`)
