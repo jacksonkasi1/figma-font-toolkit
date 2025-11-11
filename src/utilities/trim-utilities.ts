@@ -244,7 +244,7 @@ export function calculateUniversalLineHeight(fontSize: number, fontWeight?: numb
 /**
  * Line height ratio thresholds
  */
-const MIN_RATIO = 1.2  // Below this = severe overlap risk (was 1.3)
+const MIN_RATIO = 1.3  // Below this = overlap risk (changed back from 1.2)
 const MAX_RATIO = 1.7  // Above this = disconnected lines
 const OPTIMAL_RATIO = 1.5  // The sweet spot
 

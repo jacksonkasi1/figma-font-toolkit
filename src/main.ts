@@ -646,7 +646,7 @@ export default function () {
               const ratio = charLineHeight.value / (fontSize as number)
 
               // Check if this is worse than what we've seen
-              if (ratio < 1.2) {
+              if (ratio < 1.3) {
                 // Too tight - this is bad
                 if (!hasIssues || ratio < worstRatio) {
                   worstRatio = ratio
