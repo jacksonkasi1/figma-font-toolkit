@@ -565,8 +565,8 @@ export default function () {
     emit<TrimCompleteHandler>('TRIM_COMPLETE', result)
   })
 
-  // Handle line height scan request
-  on<ScanLineHeightsHandler>('SCAN_LINE_HEIGHTS', async function () {
+  // Reusable line height scan function
+  async function performLineHeightScan(): Promise<LineHeightScanResult> {
     const selection = figma.currentPage.selection
 
     const result: LineHeightScanResult = {
@@ -577,8 +577,7 @@ export default function () {
 
     if (selection.length === 0) {
       figma.notify('Please select at least one text layer', { error: true })
-      emit<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', result)
-      return
+      return result
     }
 
     // Import trim utilities
@@ -608,8 +607,7 @@ export default function () {
 
     if (textNodes.length === 0) {
       figma.notify('No text layers found in selection', { error: true })
-      emit<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', result)
-      return
+      return result
     }
 
     // Process each text node
@@ -742,6 +740,12 @@ export default function () {
       figma.notify('All line heights are optimal!')
     }
 
+    return result
+  }
+
+  // Handle line height scan request
+  on<ScanLineHeightsHandler>('SCAN_LINE_HEIGHTS', async function () {
+    const result = await performLineHeightScan()
     emit<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', result)
   })
 
@@ -775,8 +779,9 @@ export default function () {
 
       figma.notify(`✓ Updated "${node.name}" line height to ${spec.newLineHeight}px`)
 
-      // Trigger rescan
-      emit<ScanLineHeightsHandler>('SCAN_LINE_HEIGHTS')
+      // Trigger rescan by calling the function directly
+      const result = await performLineHeightScan()
+      emit<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', result)
     } catch (error) {
       figma.notify(`Failed to fix line height: ${error}`, { error: true })
     }
