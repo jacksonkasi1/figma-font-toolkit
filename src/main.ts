@@ -616,15 +616,31 @@ export default function () {
     for (const textNode of textNodes) {
       try {
         const fontName = textNode.fontName
-        if (fontName === figma.mixed) continue
+        if (fontName === figma.mixed) {
+          console.log(`[LH Scan] Skipping ${textNode.name}: mixed fonts`)
+          continue
+        }
 
         const fontSize = textNode.fontSize
-        if (fontSize === figma.mixed) continue
+        if (fontSize === figma.mixed) {
+          console.log(`[LH Scan] Skipping ${textNode.name}: mixed font sizes`)
+          continue
+        }
 
         const lineHeightPx = getLineHeightInPixels(textNode)
         const issue = checkLineHeightIssue(fontSize, lineHeightPx)
         const recommendedLineHeight = getRecommendedLineHeight(fontSize)
         const overlapAmount = calculateLineOverlap(fontSize, lineHeightPx)
+
+        // Debug logging
+        console.log(`[LH Scan] ${textNode.name}:`, {
+          fontSize,
+          lineHeight: lineHeightPx,
+          ratio: issue.ratio.toFixed(2),
+          issueType: issue.issueType,
+          hasIssue: issue.hasIssue,
+          recommended: recommendedLineHeight
+        })
 
         result.textLayers.push({
           nodeId: textNode.id,
@@ -645,7 +661,7 @@ export default function () {
           result.issuesFound++
         }
       } catch (error) {
-        console.error(`Error scanning ${textNode.name}:`, error)
+        console.error(`[LH Scan] Error scanning ${textNode.name}:`, error)
       }
     }
 

@@ -173,35 +173,42 @@ export function hasMixedLineHeights(node: TextNode): boolean {
  */
 export function getLineHeightInPixels(node: TextNode): number {
   const lineHeight = node.lineHeight
+  const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
 
   if (lineHeight === figma.mixed) {
+    console.log('[getLineHeightInPixels] Mixed line height detected, checking first character')
     // Use the first character's line height
     const firstLineHeight = node.getRangeLineHeight(0, 1)
     if (firstLineHeight !== figma.mixed) {
       if (firstLineHeight.unit === 'PIXELS') {
+        console.log('[getLineHeightInPixels] First char PIXELS:', firstLineHeight.value)
         return firstLineHeight.value
       } else if (firstLineHeight.unit === 'PERCENT') {
-        const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
-        return (firstLineHeight.value / 100) * fontSize
+        const calculated = (firstLineHeight.value / 100) * fontSize
+        console.log('[getLineHeightInPixels] First char PERCENT:', firstLineHeight.value, '% =', calculated, 'px')
+        return calculated
       } else {
         // AUTO
-        const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
+        console.log('[getLineHeightInPixels] First char AUTO, using 120%')
         return fontSize * 1.2 // Default to 120%
       }
     }
   } else {
     if (lineHeight.unit === 'PIXELS') {
+      console.log('[getLineHeightInPixels] PIXELS:', lineHeight.value)
       return lineHeight.value
     } else if (lineHeight.unit === 'PERCENT') {
-      const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
-      return (lineHeight.value / 100) * fontSize
+      const calculated = (lineHeight.value / 100) * fontSize
+      console.log('[getLineHeightInPixels] PERCENT:', lineHeight.value, '% =', calculated, 'px')
+      return calculated
     } else {
       // AUTO
-      const fontSize = typeof node.fontSize === 'number' ? node.fontSize : 16
+      console.log('[getLineHeightInPixels] AUTO, using 120%')
       return fontSize * 1.2 // Default to 120%
     }
   }
 
+  console.log('[getLineHeightInPixels] Fallback to default')
   return 16 * 1.2 // Fallback
 }
 
@@ -237,7 +244,7 @@ export function calculateUniversalLineHeight(fontSize: number, fontWeight?: numb
 /**
  * Line height ratio thresholds
  */
-const MIN_RATIO = 1.3  // Below this = overlap risk
+const MIN_RATIO = 1.2  // Below this = severe overlap risk (was 1.3)
 const MAX_RATIO = 1.7  // Above this = disconnected lines
 const OPTIMAL_RATIO = 1.5  // The sweet spot
 
