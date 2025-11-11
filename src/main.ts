@@ -627,6 +627,77 @@ export default function () {
           continue
         }
 
+        // Check for mixed line heights
+        const lineHeight = textNode.lineHeight
+        if (lineHeight === figma.mixed) {
+          console.log(`[LH Scan] WARNING: ${textNode.name} has mixed line heights!`)
+          console.log('[LH Scan] Checking all characters to find worst case...')
+
+          // Check all characters to find issues
+          const characters = textNode.characters
+          let worstRatio = 1.5  // Start with optimal
+          let worstLineHeight = fontSize * 1.5
+          let hasIssues = false
+          let worstIssueType: 'TOO_TIGHT' | 'TOO_LOOSE' | 'OPTIMAL' = 'OPTIMAL'
+
+          for (let i = 0; i < characters.length; i++) {
+            const charLineHeight = textNode.getRangeLineHeight(i, i + 1)
+            if (charLineHeight !== figma.mixed && charLineHeight.unit === 'PIXELS') {
+              const ratio = charLineHeight.value / (fontSize as number)
+
+              // Check if this is worse than what we've seen
+              if (ratio < 1.2) {
+                // Too tight - this is bad
+                if (!hasIssues || ratio < worstRatio) {
+                  worstRatio = ratio
+                  worstLineHeight = charLineHeight.value
+                  worstIssueType = 'TOO_TIGHT'
+                  hasIssues = true
+                }
+              } else if (ratio > 1.7) {
+                // Too loose - also bad
+                if (!hasIssues || ratio > worstRatio) {
+                  worstRatio = ratio
+                  worstLineHeight = charLineHeight.value
+                  worstIssueType = 'TOO_LOOSE'
+                  hasIssues = true
+                }
+              }
+            }
+          }
+
+          if (hasIssues) {
+            console.log(`[LH Scan] Worst case in ${textNode.name}:`, {
+              lineHeight: worstLineHeight,
+              ratio: worstRatio.toFixed(2),
+              issueType: worstIssueType
+            })
+
+            const recommendedLineHeight = getRecommendedLineHeight(fontSize)
+
+            result.textLayers.push({
+              nodeId: textNode.id,
+              nodeName: `${textNode.name} (mixed)`,  // Add (mixed) indicator
+              fontFamily: fontName.family,
+              fontStyle: fontName.style,
+              fontSize,
+              lineHeight: worstLineHeight,
+              lineHeightRatio: worstRatio,
+              hasIssue: true,
+              issueType: worstIssueType,
+              recommendedLineHeight,
+              overlapAmount: Math.abs(recommendedLineHeight - worstLineHeight)
+            })
+
+            result.totalScanned++
+            result.issuesFound++
+          } else {
+            console.log(`[LH Scan] ${textNode.name} has mixed line heights but all are optimal`)
+          }
+
+          continue  // Skip the normal check since we handled mixed case
+        }
+
         const lineHeightPx = getLineHeightInPixels(textNode)
         const issue = checkLineHeightIssue(fontSize, lineHeightPx)
         const recommendedLineHeight = getRecommendedLineHeight(fontSize)
