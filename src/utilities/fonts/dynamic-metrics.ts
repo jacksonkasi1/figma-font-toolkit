@@ -1,66 +1,47 @@
-// import { fromBlob } from '@capsizecss/unpack'
-
 // Cache to store dynamically fetched metrics
 const DYNAMIC_METRICS_CACHE: Record<string, any> = {}
 
-export async function fetchDynamicFontMetrics(fontFamily: string): Promise<any | null> {
-  // TEMPORARY DISABLE due to build issues with fontkit/clone dependencies.
-  // We have covered the top 60+ Google Fonts in the static metrics.ts map.
-  // Dynamic fetching for other fonts will be re-enabled once we solve the bundler config.
-  return null
+// Configuration for the metrics server
+// In production, this should be an environment variable or a deployed URL
+const METRICS_SERVER_URL = 'http://localhost:3000/metrics'
 
-  /*
+export async function fetchDynamicFontMetrics(fontFamily: string): Promise<any | null> {
   // 1. Check cache first
   if (DYNAMIC_METRICS_CACHE[fontFamily]) {
     return DYNAMIC_METRICS_CACHE[fontFamily]
   }
 
   try {
-    // 2. Construct Google Fonts URL
     const familyName = fontFamily.replace(/ /g, '+')
-    const cssUrl = `https://fonts.googleapis.com/css2?family=${familyName}:wght@400&display=swap`
+    const url = `${METRICS_SERVER_URL}?family=${familyName}`
 
-    // 3. Fetch CSS
-    const cssResponse = await fetch(cssUrl)
-    if (!cssResponse.ok) {
-      console.warn(`[Dynamic Metrics] Failed to fetch CSS for ${fontFamily}`)
-      return null
-    }
-    const cssText = await cssResponse.text()
+    console.log(`[Dynamic Metrics] Requesting from server: ${url}`)
 
-    // 4. Extract font file URL (woff2) from CSS
-    // Look for "src: url(https://...)"
-    const fontUrlMatch = cssText.match(/src:\s*url\((https?:\/\/[^)]+)\)/)
-    if (!fontUrlMatch || !fontUrlMatch[1]) {
-      console.warn(`[Dynamic Metrics] Could not find font URL in CSS for ${fontFamily}`)
-      return null
-    }
-    const fontUrl = fontUrlMatch[1]
-
-    // 5. Fetch binary font file
-    const fontResponse = await fetch(fontUrl)
-    if (!fontResponse.ok) {
-      console.warn(`[Dynamic Metrics] Failed to fetch font file for ${fontFamily}`)
-      return null
-    }
-    const arrayBuffer = await fontResponse.arrayBuffer()
-
-    // 6. Unpack metrics
-    // Create a Blob from the buffer for fromBlob
-    const blob = new Blob([arrayBuffer])
-    const metrics = await fromBlob(blob)
+    const response = await fetch(url)
     
-    // 7. Store in cache
-    if (metrics) {
-      console.log(`[Dynamic Metrics] Successfully fetched metrics for ${fontFamily}:`, metrics)
-      DYNAMIC_METRICS_CACHE[fontFamily] = metrics
-      return metrics
+    if (!response.ok) {
+      console.warn(`[Dynamic Metrics] Server returned ${response.status} for ${fontFamily}`)
+      return null
+    }
+
+    const data = await response.json()
+
+    // Check for server-side error
+    if (data.error) {
+      console.warn(`[Dynamic Metrics] Server error for ${fontFamily}: ${data.error}`)
+      return null
+    }
+
+    // Validate that we got actual metrics
+    if (data.ascent && data.unitsPerEm) {
+      console.log(`[Dynamic Metrics] Successfully fetched metrics for ${fontFamily}`, data)
+      DYNAMIC_METRICS_CACHE[fontFamily] = data
+      return data
     }
 
   } catch (error) {
-    console.error(`[Dynamic Metrics] Error fetching metrics for ${fontFamily}:`, error)
+    console.error(`[Dynamic Metrics] Network error fetching metrics for ${fontFamily}:`, error)
   }
 
   return null
-  */
 }
