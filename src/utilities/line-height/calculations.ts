@@ -1,28 +1,29 @@
+import { getFontMetrics } from '../fonts/metrics'
+
 export function calculatePerfectLineHeight(
   fontSize: number,
   fontName: string,
   fontCategory?: string
 ): number {
-  let multiplier: number
+  // STEP 1: ESTABLISH BASE HEURISTIC (The "Intent" Layer)
+  // This defines what we *want* the text to look like stylistically.
+  let heuristicMultiplier: number
   let isHeadingOrDisplay = false
 
-  // STEP 1: ESTABLISH BASE ROLE
   if (fontSize > 32) {
-    multiplier = 1.1 // Display / Hero
+    heuristicMultiplier = 1.15 // Display / Hero
     isHeadingOrDisplay = true
   } else if (fontSize >= 20) {
-    multiplier = 1.25 // Heading
+    heuristicMultiplier = 1.25 // Heading
     isHeadingOrDisplay = true
   } else if (fontSize >= 14) {
-    multiplier = 1.5 // Body Copy
+    heuristicMultiplier = 1.5 // Body Copy
   } else {
-    multiplier = 1.35 // Caption / UI
+    heuristicMultiplier = 1.35 // Caption / UI
   }
 
-  // STEP 2: DETECT FONT PERSONALITY
+  // Apply Personality Modifiers to Heuristic
   const name = fontName || ''
-  
-  // Check for Condensed fonts
   if (
     name.includes('Condensed') ||
     name.includes('Compressed') ||
@@ -30,11 +31,9 @@ export function calculatePerfectLineHeight(
     name.includes('Oswald') ||
     name.includes('Bebas')
   ) {
-    multiplier -= 0.1
+    heuristicMultiplier -= 0.1
   }
 
-  // Check for "Tall" Serifs
-  // For Headings/Display, we SKIP the extra height for Tall Serifs to keep it tight.
   if (!isHeadingOrDisplay) {
     if (
       fontCategory === 'Serif' ||
@@ -42,36 +41,78 @@ export function calculatePerfectLineHeight(
       name.includes('Lora') ||
       name.includes('Playfair')
     ) {
-      multiplier += 0.1
+      heuristicMultiplier += 0.1
     }
   }
 
-  // Check for "Display"
   if (
     name.includes('Display') ||
     fontCategory === 'Handwriting'
   ) {
-    multiplier -= 0.05
+    heuristicMultiplier -= 0.05
   }
 
-  // STEP 3: CALCULATE RAW HEIGHT
-  const rawHeight = fontSize * multiplier
+  // Calculate the target "Design" height
+  const heuristicHeight = fontSize * heuristicMultiplier
 
-  // STEP 4: APPLY GRID OR ROUNDING
+  // STEP 2: APPLY METRICS (The "Physics" Layer)
+  // Check if we have physical data for this font to prevent clipping.
+  const metrics = getFontMetrics(fontName)
   let finalHeight: number
 
-  if (isHeadingOrDisplay) {
-    // For Headings/Display, disable 4px grid to ensure tight fit
-    // Use floor as per "Tight/Heading Mode" spec
-    finalHeight = Math.floor(rawHeight)
+  if (metrics) {
+    // We have data! Let's calculate the absolute minimum space this font physically needs.
+    const { ascent, descent, unitsPerEm } = metrics
+    
+    // Calculate the physical height of the ink (Ascender to Descender)
+    const contentRatio = (Math.abs(ascent) + Math.abs(descent)) / unitsPerEm
+    const physicalMinHeight = fontSize * contentRatio
+
+    // Add "Leading Buffer" (Breathing Room)
+    // We revert to 10% (0.1) to ensure large text gets enough space (e.g. 49px -> 74px).
+    // We will handle the "tight" small text edge cases via Smart Rounding below.
+    const leadingBuffer = fontSize * 0.1
+    const targetHeight = physicalMinHeight + leadingBuffer
+
+    if (isHeadingOrDisplay) {
+      // For Headings:
+      // We take the larger of:
+      // 1. The Heuristic (Design Intent - e.g. 1.15x)
+      // 2. The Physical Target (Physics + Buffer)
+      const safeHeight = Math.max(heuristicHeight, targetHeight)
+      
+      // Smart Rounding (Integer Grid):
+      // Standard Math.ceil would force 35.14px -> 36px (too loose for small text).
+      // But we need 73.5px -> 74px (correct for large text).
+      
+      // Logic: If we are barely over the integer threshold (<= 0.2px), snap DOWN.
+      // This ignores negligible buffer overflow for tighter fit on small text.
+      const remainder = safeHeight % 1
+      if (remainder > 0 && remainder <= 0.2) {
+        finalHeight = Math.floor(safeHeight)
+      } else {
+        finalHeight = Math.ceil(safeHeight)
+      }
+    } else {
+      // For Body: Rhythm is king. 
+      // We still prefer 4px grid for body text (vertical rhythm), but ensure we clear the physical target.
+      const targetRaw = Math.max(heuristicHeight, targetHeight)
+      finalHeight = Math.ceil(targetRaw / 4) * 4
+    }
   } else {
-    // For Body/UI, keep the 4px grid for rhythm
-    finalHeight = Math.ceil(rawHeight / 4) * 4
+    // Fallback: No metrics available. Use the "Smart Guess" logic.
+    if (isHeadingOrDisplay) {
+      finalHeight = Math.ceil(heuristicHeight)
+    } else {
+      finalHeight = Math.ceil(heuristicHeight / 4) * 4
+    }
   }
 
-  // STEP 5: SAFETY FLOOR
-  if (finalHeight < fontSize + 2) {
-    finalHeight = fontSize + 4
+  // STEP 3: SAFETY FLOOR
+  // Ensure line height is never smaller than the font itself + a safety buffer
+  const minSafety = Math.max(fontSize + 4, fontSize * 1.05)
+  if (finalHeight < minSafety) {
+    finalHeight = Math.ceil(minSafety)
   }
 
   return finalHeight

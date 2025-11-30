@@ -12,25 +12,29 @@ export function checkLineHeightIssue(
 } {
   const recommended = calculatePerfectLineHeight(fontSize, fontName)
   const ratio = lineHeightPx / fontSize
+  const difference = lineHeightPx - recommended
+  const TOLERANCE = 0.5 // Allow 0.5px deviation
+
+  if (Math.abs(difference) <= TOLERANCE) {
+    return {
+      hasIssue: false,
+      issueType: 'OPTIMAL',
+      ratio,
+      recommended
+    }
+  }
   
-  if (lineHeightPx < recommended) {
+  if (difference < 0) {
     return {
       hasIssue: true,
       issueType: 'TOO_TIGHT',
       ratio,
       recommended
     }
-  } else if (lineHeightPx > recommended) {
+  } else {
     return {
       hasIssue: true,
       issueType: 'TOO_LOOSE',
-      ratio,
-      recommended
-    }
-  } else {
-    return {
-      hasIssue: false,
-      issueType: 'OPTIMAL',
       ratio,
       recommended
     }

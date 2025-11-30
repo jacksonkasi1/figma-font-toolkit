@@ -96,7 +96,7 @@ export function LineHeightTab() {
                           {layer.nodeName}
                         </div>
                         <div style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
-                          {layer.fontSize}px · LH: {layer.lineHeight.toFixed(0)}px · {layer.lineHeightRatio.toFixed(2)}× {issueText}
+                          {layer.fontSize.toFixed(2)}px · LH: {layer.lineHeight.toFixed(0)}px · {layer.lineHeightRatio.toFixed(2)}× {issueText}
                         </div>
 
                         <div style={{
