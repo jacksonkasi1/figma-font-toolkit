@@ -1,8 +1,7 @@
-import { getFontMetrics } from '../fonts/metrics'
-
 export function calculatePerfectLineHeight(
   fontSize: number,
   fontName: string,
+  metrics?: any,
   fontCategory?: string
 ): number {
   // STEP 1: ESTABLISH BASE HEURISTIC (The "Intent" Layer)
@@ -56,8 +55,7 @@ export function calculatePerfectLineHeight(
   const heuristicHeight = fontSize * heuristicMultiplier
 
   // STEP 2: APPLY METRICS (The "Physics" Layer)
-  // Check if we have physical data for this font to prevent clipping.
-  const metrics = getFontMetrics(fontName)
+  // Use the provided metrics object (from local map or dynamic fetch)
   let finalHeight: number
 
   if (metrics) {
@@ -65,6 +63,9 @@ export function calculatePerfectLineHeight(
     const { ascent, descent, unitsPerEm } = metrics
     
     // Calculate the physical height of the ink (Ascender to Descender)
+    // Note: We add absolute values because descent is often negative in raw data, 
+    // or positive in normalized data, but we want the total magnitude.
+    // Capsize metrics are usually positive integers for both.
     const contentRatio = (Math.abs(ascent) + Math.abs(descent)) / unitsPerEm
     const physicalMinHeight = fontSize * contentRatio
 
@@ -118,12 +119,12 @@ export function calculatePerfectLineHeight(
   return finalHeight
 }
 
-export function getRecommendedLineHeight(fontSize: number, fontName: string = ''): number {
-  return calculatePerfectLineHeight(fontSize, fontName)
+export function getRecommendedLineHeight(fontSize: number, fontName: string = '', metrics?: any): number {
+  return calculatePerfectLineHeight(fontSize, fontName, metrics)
 }
 
-export function calculateLineOverlap(fontSize: number, lineHeightPx: number, fontName: string = ''): number {
-  const recommendedLineHeight = getRecommendedLineHeight(fontSize, fontName)
+export function calculateLineOverlap(fontSize: number, lineHeightPx: number, fontName: string = '', metrics?: any): number {
+  const recommendedLineHeight = getRecommendedLineHeight(fontSize, fontName, metrics)
   const difference = Math.abs(recommendedLineHeight - lineHeightPx)
   return Math.round(difference)
 }

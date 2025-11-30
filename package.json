@@ -11,6 +11,7 @@
   "dependencies": {
     "@capsizecss/core": "^4.0.0",
     "@capsizecss/metrics": "^2.0.0",
+    "@capsizecss/unpack": "^3.0.1",
     "@create-figma-plugin/ui": "^3.2.0",
     "@create-figma-plugin/utilities": "^3.2.0",
     "preact": "^10.23.1"
@@ -19,6 +20,8 @@
     "@create-figma-plugin/build": "^3.2.0",
     "@create-figma-plugin/tsconfig": "^3.2.0",
     "@figma/plugin-typings": "^1.90.0",
+    "@types/node": "^24.10.1",
+    "clone": "^2.1.2",
     "typescript": "^5.3.3"
   },
   "figma-plugin": {

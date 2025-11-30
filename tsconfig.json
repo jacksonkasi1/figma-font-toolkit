@@ -2,7 +2,9 @@
   "extends": "@create-figma-plugin/tsconfig",
   "compilerOptions": {
     "strict": true,
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "downlevelIteration": true,
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*"

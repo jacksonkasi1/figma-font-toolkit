@@ -3,6 +3,8 @@ import type { LineHeightScanResult, LineHeightScanCompleteHandler } from '../../
 import { getLineHeightInPixels } from '../../utilities/node/measurements'
 import { checkLineHeightIssue } from '../../utilities/line-height/analysis'
 import { getRecommendedLineHeight, calculateLineOverlap } from '../../utilities/line-height/calculations'
+import { getFontMetrics } from '../../utilities/fonts/metrics'
+import { fetchDynamicFontMetrics } from '../../utilities/fonts/dynamic-metrics'
 
 export const scanLineHeightsHandler = async function () {
   const selection = figma.currentPage.selection
@@ -41,6 +43,31 @@ export const scanLineHeightsHandler = async function () {
     return
   }
 
+  // Pre-fetch metrics for all unique font families
+  const uniqueFamilies = new Set<string>()
+  for (const node of textNodes) {
+    if (node.fontName !== figma.mixed) {
+      uniqueFamilies.add(node.fontName.family)
+    }
+  }
+
+  // Check if we need to fetch anything dynamically
+  const missingMetrics: string[] = []
+  for (const family of uniqueFamilies) {
+    if (!getFontMetrics(family)) {
+      missingMetrics.push(family)
+    }
+  }
+
+  if (missingMetrics.length > 0) {
+    figma.notify(`Fetching metrics for ${missingMetrics.length} font(s)...`)
+    
+    // Fetch sequentially to avoid flooding network/cache issues
+    for (const family of missingMetrics) {
+      await fetchDynamicFontMetrics(family)
+    }
+  }
+
   for (const textNode of textNodes) {
     try {
       const fontName = textNode.fontName
@@ -55,11 +82,25 @@ export const scanLineHeightsHandler = async function () {
         continue
       }
 
+      // Get metrics (try local first, then check if dynamic cache has it)
+      // Note: fetchDynamicFontMetrics stores in a cache that we can't directly access here 
+      // unless we export the cache or blindly call fetch again (which checks cache).
+      // BUT, calculatePerfectLineHeight needs the metrics object passed in.
+      // So we need to retrieve it.
+      let metrics = getFontMetrics(fontName.family)
+      if (!metrics) {
+        // Try to get from the dynamic fetch we just did
+        metrics = await fetchDynamicFontMetrics(fontName.family)
+      }
+
       const lineHeight = textNode.lineHeight
       if (lineHeight === figma.mixed) {
         console.log(`[LH Scan] WARNING: ${textNode.name} has mixed line heights!`)
-        console.log('[LH Scan] Checking all characters to find worst case...')
-
+        
+        // We'll use the first character's metrics for mixed line height analysis for now
+        // or just skip the complex mixed analysis. 
+        // For now, let's keep the existing logic but use the metrics we found.
+        
         const characters = textNode.characters
         let worstRatio = 1.5
         let worstLineHeight = fontSize * 1.5
@@ -69,7 +110,7 @@ export const scanLineHeightsHandler = async function () {
         for (let i = 0; i < characters.length; i++) {
           const charLineHeight = textNode.getRangeLineHeight(i, i + 1)
           if (charLineHeight !== figma.mixed && charLineHeight.unit === 'PIXELS') {
-            const issue = checkLineHeightIssue(fontSize, charLineHeight.value, fontName.family)
+            const issue = checkLineHeightIssue(fontSize, charLineHeight.value, fontName.family, metrics)
 
             if (issue.hasIssue) {
               if (!hasIssues) {
@@ -83,13 +124,7 @@ export const scanLineHeightsHandler = async function () {
         }
 
         if (hasIssues) {
-          console.log(`[LH Scan] Worst case in ${textNode.name}:`, {
-            lineHeight: worstLineHeight,
-            ratio: worstRatio.toFixed(2),
-            issueType: worstIssueType
-          })
-
-          const recommendedLineHeight = getRecommendedLineHeight(fontSize, fontName.family)
+          const recommendedLineHeight = getRecommendedLineHeight(fontSize, fontName.family, metrics)
 
           result.textLayers.push({
             nodeId: textNode.id,
@@ -107,26 +142,14 @@ export const scanLineHeightsHandler = async function () {
 
           result.totalScanned++
           result.issuesFound++
-        } else {
-          console.log(`[LH Scan] ${textNode.name} has mixed line heights but all are optimal`)
-        }
-
+        } 
         continue
       }
 
       const lineHeightPx = getLineHeightInPixels(textNode)
-      const issue = checkLineHeightIssue(fontSize, lineHeightPx, fontName.family)
+      const issue = checkLineHeightIssue(fontSize, lineHeightPx, fontName.family, metrics)
       const recommendedLineHeight = issue.recommended
-      const overlapAmount = calculateLineOverlap(fontSize, lineHeightPx, fontName.family)
-
-      console.log(`[LH Scan] ${textNode.name}:`, {
-        fontSize,
-        lineHeight: lineHeightPx,
-        ratio: issue.ratio.toFixed(2),
-        issueType: issue.issueType,
-        hasIssue: issue.hasIssue,
-        recommended: recommendedLineHeight
-      })
+      const overlapAmount = calculateLineOverlap(fontSize, lineHeightPx, fontName.family, metrics)
 
       result.textLayers.push({
         nodeId: textNode.id,
