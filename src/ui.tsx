@@ -18,7 +18,7 @@ import { LineHeightTab } from './components/LineHeightTab'
 import '!./styles.css'
 
 function Plugin() {
-  const [activeTab, setActiveTab] = useState<string>('fonts')
+  const [activeTab, setActiveTab] = useState<string>('lineheight')
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [availableFonts, setAvailableFonts] = useState<Font[]>([])
   const [isScanning, setIsScanning] = useState(false)
@@ -91,6 +91,13 @@ function Plugin() {
       {/* Tabs */}
       <nav class="tabs">
         <button
+          class={activeTab === 'lineheight' ? 'tab tab--active' : 'tab'}
+          onClick={() => setActiveTab('lineheight')}
+          title="Line Height Overlap Detection"
+        >
+          LH
+        </button>
+        <button
           class={activeTab === 'fonts' ? 'tab tab--active' : 'tab'}
           onClick={() => setActiveTab('fonts')}
         >
@@ -101,13 +108,6 @@ function Plugin() {
           onClick={() => setActiveTab('groups')}
         >
           Groups
-        </button>
-        <button
-          class={activeTab === 'lineheight' ? 'tab tab--active' : 'tab'}
-          onClick={() => setActiveTab('lineheight')}
-          title="Line Height Overlap Detection"
-        >
-          LH
         </button>
         <button
           class={activeTab === 'trim' ? 'tab tab--active' : 'tab'}
