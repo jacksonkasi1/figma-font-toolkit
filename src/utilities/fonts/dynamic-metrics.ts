@@ -3,7 +3,7 @@ const DYNAMIC_METRICS_CACHE: Record<string, any> = {}
 
 // Configuration for the metrics server
 // In production, this should be an environment variable or a deployed URL
-const METRICS_SERVER_URL = 'http://localhost:3000/metrics'
+const METRICS_SERVER_URL = 'https://font-toolkit.vercel.app/metrics'
 
 export async function fetchDynamicFontMetrics(fontFamily: string): Promise<any | null> {
   // 1. Check cache first
