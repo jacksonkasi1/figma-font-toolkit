@@ -14,6 +14,8 @@
     "@capsizecss/unpack": "^3.0.1",
     "@create-figma-plugin/ui": "^3.2.0",
     "@create-figma-plugin/utilities": "^3.2.0",
+    "@elysiajs/cors": "^1.4.0",
+    "elysia": "^1.4.16",
     "preact": "^10.23.1"
   },
   "devDependencies": {

@@ -9,7 +9,7 @@ const app = new Elysia()
   .get('/', () => 'Font Metrics Server is Running')
   .get('/metrics', async ({ query }) => {
     const { family } = query
-    
+
     if (!family) {
       return { error: 'Font family is required' }
     }
@@ -62,6 +62,12 @@ const app = new Elysia()
       family: t.String()
     })
   })
-  .listen(3000)
 
-console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
+// Only listen when running locally
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(3000)
+  console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
+}
+
+// Export for Vercel
+export default app
