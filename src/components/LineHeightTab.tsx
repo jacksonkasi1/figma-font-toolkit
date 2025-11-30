@@ -1,11 +1,12 @@
 import { h } from 'preact'
 import { useState, useCallback, useEffect } from 'preact/hooks'
 import { emit, on } from '@create-figma-plugin/utilities'
-import type { LineHeightScanResult, ScanLineHeightsHandler, LineHeightScanCompleteHandler, FixLineHeightHandler, SelectNodeHandler } from '../types'
+import type { LineHeightScanResult, ScanLineHeightsHandler, LineHeightScanCompleteHandler, FixLineHeightHandler, FixAllLineHeightsHandler, SelectNodeHandler } from '../types'
 
 export function LineHeightTab() {
   const [scanResult, setScanResult] = useState<LineHeightScanResult | null>(null)
   const [isScanning, setIsScanning] = useState(false)
+  const [isFixingAll, setIsFixingAll] = useState(false)
   const [fixingNodeId, setFixingNodeId] = useState<string | null>(null)
 
   const handleScan = useCallback(() => {
@@ -18,6 +19,22 @@ export function LineHeightTab() {
     emit<FixLineHeightHandler>('FIX_LINE_HEIGHT', { nodeId, newLineHeight: recommendedLineHeight })
   }, [])
 
+  const handleFixAll = useCallback(() => {
+    if (!scanResult) return
+    
+    const fixes = scanResult.textLayers
+      .filter(layer => layer.hasIssue && layer.recommendedLineHeight !== undefined)
+      .map(layer => ({
+        nodeId: layer.nodeId,
+        newLineHeight: layer.recommendedLineHeight!
+      }))
+
+    if (fixes.length === 0) return
+
+    setIsFixingAll(true)
+    emit<FixAllLineHeightsHandler>('FIX_ALL_LINE_HEIGHTS', { fixes })
+  }, [scanResult])
+
   const handleSelectNode = useCallback((nodeId: string) => {
     emit<SelectNodeHandler>('SELECT_NODE', { nodeId })
   }, [])
@@ -27,6 +44,7 @@ export function LineHeightTab() {
     const unsubscribe = on<LineHeightScanCompleteHandler>('LINE_HEIGHT_SCAN_COMPLETE', (result: LineHeightScanResult) => {
       setScanResult(result)
       setIsScanning(false)
+      setIsFixingAll(false)
       setFixingNodeId(null)
     })
 
@@ -55,7 +73,7 @@ export function LineHeightTab() {
         <button
           class="btn btn--primary"
           onClick={handleScan}
-          disabled={isScanning}
+          disabled={isScanning || isFixingAll}
           style={{ width: '100%' }}
         >
           {isScanning ? 'Scanning...' : 'Scan'}
@@ -67,11 +85,30 @@ export function LineHeightTab() {
         <div style={{ borderTop: '1px solid var(--color-border)' }}>
           {issuesOnly.length > 0 ? (
             <div>
-              {/* Summary */}
-              <div style={{ padding: '8px 12px', backgroundColor: 'var(--color-bg-warning-subtle)' }}>
+              {/* Summary & Fix All */}
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: 'var(--color-bg-warning-subtle)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
                 <div style={{ fontSize: '11px', color: 'var(--color-text-warning)', fontWeight: 600 }}>
                   ⚠ {issuesOnly.length} issue{issuesOnly.length !== 1 ? 's' : ''} found
                 </div>
+                <button
+                  class="btn btn--secondary"
+                  onClick={handleFixAll}
+                  disabled={isFixingAll}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '10px',
+                    minHeight: '24px',
+                    height: '24px'
+                  }}
+                >
+                  {isFixingAll ? 'Fixing...' : 'Fix All'}
+                </button>
               </div>
 
               {/* Issues List */}
@@ -115,7 +152,7 @@ export function LineHeightTab() {
                               e.stopPropagation()
                               handleFix(layer.nodeId, layer.recommendedLineHeight!)
                             }}
-                            disabled={fixingNodeId === layer.nodeId}
+                            disabled={fixingNodeId === layer.nodeId || isFixingAll}
                             style={{
                               padding: '2px 8px',
                               fontSize: '10px',

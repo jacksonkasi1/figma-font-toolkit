@@ -8,6 +8,7 @@ import { selectNodeHandler } from './handlers/selection/select'
 import { trimTextHandler } from './handlers/trim/trim-text'
 import { scanLineHeightsHandler } from './handlers/line-height/scan'
 import { fixLineHeightHandler } from './handlers/line-height/fix'
+import { fixAllLineHeightsHandler } from './handlers/line-height/fix-all'
 
 import type {
   ScanFontsHandler,
@@ -18,6 +19,7 @@ import type {
   TrimTextHandler,
   ScanLineHeightsHandler,
   FixLineHeightHandler,
+  FixAllLineHeightsHandler,
   SelectNodeHandler
 } from './types'
 
@@ -30,6 +32,7 @@ export default function () {
   on<TrimTextHandler>('TRIM_TEXT', trimTextHandler)
   on<ScanLineHeightsHandler>('SCAN_LINE_HEIGHTS', scanLineHeightsHandler)
   on<FixLineHeightHandler>('FIX_LINE_HEIGHT', fixLineHeightHandler)
+  on<FixAllLineHeightsHandler>('FIX_ALL_LINE_HEIGHTS', fixAllLineHeightsHandler)
   on<SelectNodeHandler>('SELECT_NODE', selectNodeHandler)
 
   once('close', function () {

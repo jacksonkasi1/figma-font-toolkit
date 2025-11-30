@@ -169,6 +169,20 @@ export interface FixLineHeightHandler extends EventHandler {
   handler: (spec: FixLineHeightSpec) => void
 }
 
+export interface LineHeightFixRequest {
+  nodeId: string
+  newLineHeight: number
+}
+
+export interface FixAllLineHeightsSpec {
+  fixes: LineHeightFixRequest[]
+}
+
+export interface FixAllLineHeightsHandler extends EventHandler {
+  name: 'FIX_ALL_LINE_HEIGHTS'
+  handler: (spec: FixAllLineHeightsSpec) => void
+}
+
 export interface SelectNodeSpec {
   nodeId: string
 }
