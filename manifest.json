@@ -1,1 +1,16 @@
-{"api":"1.0.0","editorType":["figma"],"id":"font-toolkit","name":"Font Toolkit","main":"build/main.js","ui":"build/ui.js","relaunchButtons":[{"name":"Open Font Toolkit","command":"open"}]}
+{
+  "api": "1.0.0",
+  "editorType": [
+    "figma"
+  ],
+  "id": "font-toolkit",
+  "name": "Font Toolkit",
+  "main": "build/main.js",
+  "ui": "build/ui.js",
+  "relaunchButtons": [
+    {
+      "name": "Open Font Toolkit",
+      "command": "open"
+    }
+  ]
+}
