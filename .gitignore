@@ -6,3 +6,6 @@ dist/
 *.swp
 *.swo
 *~
+
+.gemini-clipboard
+ build

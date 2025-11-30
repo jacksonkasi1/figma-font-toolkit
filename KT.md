@@ -9,22 +9,22 @@ This document serves as a **Product Requirements Document (PRD) and Logic Guide*
 
 -----
 
-## 1\. The Core Logic: "The Universal Math Sheet"
+## 1. The Core Logic: "The Universal Math Sheet"
 
 This is the baseline lookup table. Before accounting for specific font quirks, the algorithm determines the **Base Multiplier** based on the font size (Text Role).
 
-| Text Role | Font Size Range | Base Multiplier (X-Factor) | Target Grid | Reasoning |
-| :--- | :--- | :--- | :--- | :--- |
-| **Display / Hero** | \> 32px | **1.1x** | Round to 4px | Big text needs tight packing to look like a solid shape. |
-| **Heading** | 20px - 32px | **1.25x** | Round to 4px | Short lines need structure. Prevents "floating" titles. |
-| **Body Copy** | 14px - 19px | **1.5x** | Round to 4px | The "Gold Standard" for long-form reading comfort. |
-| **Caption / UI** | \< 14px | **1.35x** | Round to 4px | Small labels need to fit into tight UI buttons/cards. |
+| Text Role | Font Size Range | Base Multiplier (X-Factor) | Target Grid | Reasoning | 
+| :--- | :--- | :--- | :--- | :--- | 
+| **Display / Hero** | > 32px | **1.1x** | Round to 4px | Big text needs tight packing to look like a solid shape. | 
+| **Heading** | 20px - 32px | **1.25x** | Round to 4px | Short lines need structure. Prevents "floating" titles. | 
+| **Body Copy** | 14px - 19px | **1.5x** | Round to 4px | The "Gold Standard" for long-form reading comfort. | 
+| **Caption / UI** | < 14px | **1.35x** | Round to 4px | Small labels need to fit into tight UI buttons/cards. | 
 
 -----
 
-## 2\. The "Personality" Detection (Variable Logic)
+## 2. The "Personality" Detection (Variable Logic)
 
-This addresses your question: *"How do we know what kind of font it is?"*
+This addresses your question: *"How do we know what kind of font it is?"
 Since we cannot visually "see" the font in code, we use **Metadata Heuristics**. We analyze the Font Name and Category to apply specific **Modifiers** to the Base Multiplier.
 
 ### Detection Hierarchy
@@ -33,25 +33,25 @@ The algorithm should check these properties in this specific order:
 
 #### A. The "Condensed" Check (Tall & Narrow)
 
-  * **Trigger:** Does Font Name contain string `"Condensed"`, `"Compressed"`, or `"Narrow"`? (e.g., *Roboto Condensed, Bebas Neue*)
+  * **Trigger:** Does Font Name contain string "Condensed", "Compressed", or "Narrow"? (e.g., *Roboto Condensed, Bebas Neue*)
   * **Action:** **Subtract 0.1** from Base Multiplier.
   * *Why:* Narrow letters have less visual weight; standard spacing looks like huge gaps.
 
 #### B. The "Tall Serif" Check (High X-Height)
 
-  * **Trigger:** Is Font Category `"Serif"`? OR Does Font Name match specific "Tall" list (e.g., *Merriweather, Lora*)?
+  * **Trigger:** Is Font Category "Serif"? OR Does Font Name match specific "Tall" list (e.g., *Merriweather, Lora*)?
   * **Action:** **Add 0.1** to Base Multiplier.
   * *Why:* Fonts like Merriweather have tall lowercase letters. They physically crash if the multiplier is too tight.
 
 #### C. The "Display" Check (Decorative)
 
-  * **Trigger:** Does Font Name contain `"Display"` or is Category `"Handwriting"`?
+  * **Trigger:** Does Font Name contain "Display" or is Category "Handwriting"?
   * **Action:** **Subtract 0.05** (Make it slightly tighter).
   * *Why:* Display fonts usually have unique bounding boxes that look better when tight.
 
 -----
 
-## 3\. The Algorithm (Pseudo-Code)
+## 3. The Algorithm (Pseudo-Code)
 
 This is the logic flow for your plugin "BrowserPilot" or automation script.
 
@@ -96,16 +96,16 @@ FUNCTION CalculateLineHeight(FontSize, FontName):
 
 -----
 
-## 4\. Test Cases (Verification)
+## 4. Test Cases (Verification)
 
 Use these examples to verify if the logic is working correctly.
 
-| Input Font | Size | Role logic | Personality Logic | Raw Math | **Final Result** | Note |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Poppins** | 16px | Body (1.5) | None | $16 \times 1.5 = 24$ | **24px** | Perfect standard. |
-| **Merriweather** | 20px | Head (1.25) | Tall (+0.1) $\rightarrow$ 1.35 | $20 \times 1.35 = 27$ | **28px** | Rounded to 4pt grid. |
-| **Merriweather** | 20px | *Override*\* | Tight Fit Preference | $20 \times 1.25 = 25$ | **25px** | *Manual override for Headers allowed.* |
-| **Oswald** | 40px | Hero (1.1) | Condensed (-0.1) $\rightarrow$ 1.0 | $40 \times 1.0 = 40$ | **40px** | Perfectly stacked. |
+| Input Font | Size | Role logic | Personality Logic | Raw Math | **Final Result** | Note | 
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | 
+| **Poppins** | 16px | Body (1.5) | None | $16 \times 1.5 = 24$ | **24px** | Perfect standard. | 
+| **Merriweather** | 20px | Head (1.25) | Tall (+0.1) $\rightarrow$ 1.35 | $20 \times 1.35 = 27$ | **28px** | Rounded to 4pt grid. | 
+| **Merriweather** | 20px | *Override*\* | Tight Fit Preference | $20 \times 1.25 = 25$ | **25px** | *Manual override for Headers allowed.* | 
+| **Oswald** | 40px | Hero (1.1) | Condensed (-0.1) $\rightarrow$ 1.0 | $40 \times 1.0 = 40$ | **40px** | Perfectly stacked. | 
 
 ### Note on the "Merriweather 25px" Edge Case
 
