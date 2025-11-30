@@ -138,6 +138,7 @@ export interface LineHeightTextLayer {
   lineHeight: number
   lineHeightRatio: number
   hasIssue: boolean
+  issueType?: 'TOO_TIGHT' | 'TOO_LOOSE' | 'OPTIMAL'
   recommendedLineHeight?: number
   overlapAmount?: number
 }
